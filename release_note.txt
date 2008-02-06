@@ -1,0 +1,97 @@
+********************************************************************
+
+v0.72
+$Date$
+$Author$
+$Rev$
+
+Some spelling mistakes fixed. 
+Name changed to job_memusage
+
+********************************************************************
+
+v0.71
+Date: 2008-01-24 12:05:23 -0700 (Thu, 24 Jan 2008) 
+Author: ddvento 
+Rev: 25 
+
+This tool will run the given executable and at then will print out the
+memory usage for it. It works for interactive, OpenMP, MPI and
+hybrid executables.
+
+Usage:
+job_memusage.exe [--details] filename-to-run [arguments-to-pass]
+
+--details = detailed view, usually not required (must placed BEFORE everything else)
+
+Notes:
+1) for OpenMP (and hybrid), the memory is shared, so only the total
+amount per node is printed: no per-thread details
+
+2) for MPI (and hybrid), if tasks (i.e. MPI rank) identification is
+required, the MP_LABELIO environment variable must be set to yes
+
+Examples:
+
+/contrib/bin/job_memusage.exe ./hello_world.exe
+
+/contrib/bin/job_memusage.exe --details cat *.txt
+
+export MP_LABELIO=yes #csh users: setenv MP_LABELIO yes
+mpirun.lsf /contrib/bin/job_memusage.exe ./cam < namelist
+
+
+********************************************************************
+
+v0.7 
+Date: 2008-01-24 (Thu, 23 Jan 2008)
+Author: ddvento 
+
+Works always: interactively, MPI and OpenMP. Requires the environment
+variable MP_LABELIO set to yes for MPI task identification.
+
+Command Line Usage:
+/contrib/bin/job_memusage.exe [--details] filename-to-run [arguments-to-pass]
+
+OpenMP Usage:
+As in Command Line, but the executable should be compiled with -qsmp=omp
+(gothca: you will see only the total memory, which is not too bad because it's shared)
+
+MPI Usage (for ksh):
+export MP_LABELIO=yes
+mpirun.lsf /contrib/bin/job_memusage.exe [--details] filename-to-run [arguments-to-pass]
+
+
+MPI Usage (for csh):
+setenv MP_LABELIO yes
+mpirun.lsf /contrib/bin/job_memusage.exe [--details] filename-to-run [arguments-to-pass]
+
+
+In all cases:
+
+--details = detailed view, usually not required (must placed BEFORE everything else)
+
+********************************************************************
+
+v0.6
+
+Works only for MPI tasks.
+
+Usage:
+mpirun.lsf /contrib/bin/job_memusage.exe [--details] filename-to-run [arguments-to-pass]
+
+--details = detailed view, usually not required (must placed BEFORE everything else)
+
+
+********************************************************************
+
+v0.5 
+
+Works only for non-parallel tasks.
+
+Usage: 
+job_memusage.exe -r filename-to-run [-a arguments-to-pass] [-d]
+
+(-d = detailed view, usually not required)
+
+********************************************************************

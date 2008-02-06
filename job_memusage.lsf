@@ -1,0 +1,18 @@
+#!/bin/ksh
+#
+# LSF batch script to run a hybrid MPI-OpenMP application
+#
+# $Id$
+#
+#BSUB -n 8                          # number of tasks
+#BSUB -a poe                        # select the poe elim
+#BSUB -R "span[ptile=8]"	 # run 8 tasks per node
+#BSUB -J davide_memprint          # job name
+#BSUB -o memprint.%J.out           # output filename
+#BSUB -e memprint.%J.err           # error filename 
+#BSUB -W 1:00                      # wall clock time (in minutes)
+#BSUB -q share                    # queue
+#BSUB -P 43610023
+
+export MP_LABELIO=yes
+mpirun.lsf ./job_memusage_mpi.exe spare_mpi.exe -s 10000000
