@@ -39,11 +39,12 @@ build-target-mpi:
 # RUN
 
 run-cmd:
-	$(MYPATH)$(SOFTW)_cmd.exe $(TARGET)_cmd.exe
+	$(MYPATH)$(SOFTW)_cmd.exe ./$(TARGET)_cmd.exe
 run-omp:
 	$(MYPATH)$(SOFTW)_omp.exe $(TARGET)_omp.exe
 run-mpi:
 	$(LSFPATH)bsub < $(SOFTW).lsf
 	$(LSFPATH)bjobs
 	
-
+repeat:
+	while [ 1 ]; do make -s run-cmd;  sleep 3; done 
