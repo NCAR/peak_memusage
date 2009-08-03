@@ -18,7 +18,11 @@ $Id$
 #endif
 
 void printUsage(char **argv) {
-	printf("\nUsage:\n%s [--details] <filename-to-run> [<arguments-to-pass>] \n\n", argv[0]);
+/*	The details options has been removed from the help, because it was
+        confusing for the users
+        printf("\nUsage:\n%s [--details] <filename-to-run> [<arguments-to-pass>] \n\n", argv[0]);
+*/
+        printf("\nUsage:\n%s <filename-to-run> [<arguments-to-pass>] \n\n", argv[0]);
 	exit(1);
 }
 
