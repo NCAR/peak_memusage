@@ -30,7 +30,7 @@ int main(int argc, char **argv) {
 	struct rusage64 us;	/* resource us struct */
 	char *runme, space = ' ';
 	time_t start_time, stop_time;
-	int detailed = 0, error, exit_status, rank;
+	int detailed = 0, error, exit_status, signal, rank;
 
 	if (argc > 1) {
 		int current_arg = 1;
@@ -60,6 +60,8 @@ int main(int argc, char **argv) {
 	printf("\nRunning: %s \nPlease wait...\n\n", runme);
 	start_time = time(NULL);
 	exit_status = system(runme);
+	signal = exit_status << 8 & 255;
+	exit_status = exit_status >> 8 & 255;
 	stop_time = time(NULL);
 	
 #ifdef COMPILE_MPI 
@@ -85,37 +87,37 @@ int main(int argc, char **argv) {
 #endif
 	
 	if (detailed) {
-		printf("Memory usage:\n%12s %12s %12s %12s %12s %12s %12s %12s\n",
+		printf("Memory usage:\n%12s %12s %12s %12s %12s %12s %12s %12s %12s\n",
 			"Time(s)", "Resident (KB)", "Code", "Allocated", "Stack",
-			"Task #", "Exit Status", "command line");
+			"Task #", "Exit Status", "Signal", "command line");
 		
 		if ( getrusage64(RUSAGE_SELF, &us) ) {
-			printf("\n\n%s ran (task #%4d). Exit status: %d\n", runme, rank, exit_status);
+			printf("\n\n%s ran (task #%4d). Exit status: %d. Signal: %d\n", runme, rank, exit_status, signal);
 			printf("Problems getting resource usage for RUSAGE_SELF\n");
 		}
 		else {
-			printf("%12.3f %12d %12d %12d %12d %12d %12d %12s (RUSAGE_SELF)\n",
+			printf("%12.3f %12d %12d %12d %12d %12d %12d %12d %12s (RUSAGE_SELF)\n",
 				difftime(stop_time, start_time), 
 				us.ru_maxrss, us.ru_ixrss, us.ru_idrss, us.ru_isrss,
-				rank, exit_status, runme);
+				rank, exit_status, signal, runme);
 		}
 		if ( getrusage64(RUSAGE_CHILDREN, &us) ) {
-			printf("\n\n%s ran (task #%4d). Exit status: %d\n", runme, rank, exit_status);
+			printf("\n\n%s ran (task #%4d). Exit status: %d. Signal: %d\n", runme, rank, exit_status, signal);
 			printf("Problems getting resource usage for RUSAGE_CHILDREN\n\n");
 		}
 		else {
-			printf("%12.3f %12d %12d %12d %12d %12d %12d %12s (RUSAGE_CHILDREN)\n\n",
+			printf("%12.3f %12d %12d %12d %12d %12d %12d %12d %12s (RUSAGE_CHILDREN)\n\n",
 				difftime(stop_time, start_time), 
 				us.ru_maxrss, us.ru_ixrss, us.ru_idrss, us.ru_isrss,
-				rank, exit_status, runme);
+				rank, exit_status, signal, runme);
 		}
 	} else {
 		if ( getrusage64(RUSAGE_CHILDREN, &us) ) {
-			printf("\n\n%s ran (task #%4d). Exit status: %d\n", runme, rank, exit_status);
+			printf("\n\n%s ran (task #%4d). Exit status: %d. Signal: %d\n", runme, rank, exit_status, signal);
 			printf("Problem getting resource usage\n");
 		} else {
-			printf("Memory usage for %12s (task #%4d) is: %10d KB. Exit status: %3d\n", 
-				runme, rank, us.ru_maxrss, exit_status);
+			printf("Memory usage for %12s (task #%4d) is: %10d KB. Exit status: %d. Signal: %d\n", 
+				runme, rank, us.ru_maxrss, exit_status, signal);
 		}
 			
 	}
