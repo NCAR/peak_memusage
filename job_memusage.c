@@ -30,7 +30,7 @@ int main(int argc, char **argv) {
 	struct rusage64 us;	/* resource us struct */
 	char *runme, space = ' ';
 	time_t start_time, stop_time;
-	int detailed = 0, error, exit_status, rank, return_code = 0;
+	int detailed = 0, error, exit_status, rank;
 
 	if (argc > 1) {
 		int current_arg = 1;
@@ -92,7 +92,6 @@ int main(int argc, char **argv) {
 		if ( getrusage64(RUSAGE_SELF, &us) ) {
 			printf("\n\n%s ran (task #%4d). Exit status: %d\n", runme, rank, exit_status);
 			printf("Problems getting resource usage for RUSAGE_SELF\n");
-			return_code = 1;
 		}
 		else {
 			printf("%12.3f %12d %12d %12d %12d %12d %12d %12s (RUSAGE_SELF)\n",
@@ -103,7 +102,6 @@ int main(int argc, char **argv) {
 		if ( getrusage64(RUSAGE_CHILDREN, &us) ) {
 			printf("\n\n%s ran (task #%4d). Exit status: %d\n", runme, rank, exit_status);
 			printf("Problems getting resource usage for RUSAGE_CHILDREN\n\n");
-			return_code = 1;
 		}
 		else {
 			printf("%12.3f %12d %12d %12d %12d %12d %12d %12s (RUSAGE_CHILDREN)\n\n",
@@ -115,7 +113,6 @@ int main(int argc, char **argv) {
 		if ( getrusage64(RUSAGE_CHILDREN, &us) ) {
 			printf("\n\n%s ran (task #%4d). Exit status: %d\n", runme, rank, exit_status);
 			printf("Problem getting resource usage\n");
-			return_code = 1;
 		} else {
 			printf("Memory usage for %12s (task #%4d) is: %10d KB. Exit status: %3d\n", 
 				runme, rank, us.ru_maxrss, exit_status);
@@ -127,5 +124,5 @@ int main(int argc, char **argv) {
     }
 #endif
 	
-	return return_code;
+	return exit_status;
 }
