@@ -41,7 +41,7 @@ build-target-mpi:
 run-cmd:
 	$(MYPATH)$(SOFTW)_cmd.exe ./$(TARGET)_cmd.exe
 run-omp:
-	$(MYPATH)$(SOFTW)_omp.exe ./$(TARGET)_omp.exe
+	export OMP_NUM_THREADS=2; $(MYPATH)$(SOFTW)_omp.exe ./$(TARGET)_omp.exe
 run-mpi:
 	$(LSFPATH)bsub < $(SOFTW).lsf
 	$(LSFPATH)bjobs
