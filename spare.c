@@ -7,6 +7,7 @@
 
 #include <stdio.h>	/* print */
 #include <stdlib.h>	/* malloc */
+#include <unistd.h>     /* optarg */
 
 #ifdef COMPILE_MPI
 #include <mpi.h>

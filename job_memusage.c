@@ -27,7 +27,7 @@ void printUsage(char **argv) {
 }
 
 int main(int argc, char **argv) {
-	struct rusage64 us;	/* resource us struct */
+	struct rusage us;	/* resource us struct */
 	char *runme, space = ' ';
 	time_t start_time, stop_time;
 	int detailed = 0, error, exit_status, signal, rank;
@@ -91,7 +91,7 @@ int main(int argc, char **argv) {
 			"Time(s)", "Resident (KB)", "Code", "Allocated", "Stack",
 			"Task #", "Exit Status", "Signal", "command line");
 		
-		if ( getrusage64(RUSAGE_SELF, &us) ) {
+		if ( getrusage(RUSAGE_SELF, &us) ) {
 			printf("\n\n%s ran (task #%4d). Exit status: %d. Signal: %d\n", runme, rank, exit_status, signal);
 			printf("Problems getting resource usage for RUSAGE_SELF\n");
 		}
@@ -101,7 +101,7 @@ int main(int argc, char **argv) {
 				us.ru_maxrss, us.ru_ixrss, us.ru_idrss, us.ru_isrss,
 				rank, exit_status, signal, runme);
 		}
-		if ( getrusage64(RUSAGE_CHILDREN, &us) ) {
+		if ( getrusage(RUSAGE_CHILDREN, &us) ) {
 			printf("\n\n%s ran (task #%4d). Exit status: %d. Signal: %d\n", runme, rank, exit_status, signal);
 			printf("Problems getting resource usage for RUSAGE_CHILDREN\n\n");
 		}
@@ -112,7 +112,7 @@ int main(int argc, char **argv) {
 				rank, exit_status, signal, runme);
 		}
 	} else {
-		if ( getrusage64(RUSAGE_CHILDREN, &us) ) {
+		if ( getrusage(RUSAGE_CHILDREN, &us) ) {
 			printf("\n\n%s ran (task #%4d). Exit status: %d. Signal: %d\n", runme, rank, exit_status, signal);
 			printf("Problem getting resource usage\n");
 		} else {

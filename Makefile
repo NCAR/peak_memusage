@@ -3,19 +3,15 @@
 #
 SOFTW=job_memusage
 TARGET=spare
-MYPATH=./
-MYHOST=valerian.scd.ucar.edu
-MYURL=/home/ddvento/subversion.ucar.edu_ddvento/src/c/job_memusage/
-CCMPI=/usr/bin/mpcc_r -D COMPILE_MPI
-CCOMP=xlc_r -U COMPILE_MPI -D COMPILE_OMP -qsmp=omp
-CCCMD=xlc_r -U COMPILE_MPI
+#CCMPI=/usr/bin/mpcc_r -D COMPILE_MPI
+#CCOMP=xlc_r -U COMPILE_MPI -D COMPILE_OMP -qsmp=omp
+#CCCMD=xlc_r -U COMPILE_MPI
+CCMPI=mpicc -D COMPILE_MPI -U COMPILE_OMP # eventually it should use mpigcc
+CCOMP=gcc -U COMPILE_MPI -D COMPILE_OMP -fopenmp
+CCCMD=gcc -U COMPILE_MPI -U COMPILE_OMP
 
-LSFPATH=/usr/local/lsf/7.0/aix5-64/bin/
 
 all: clean build-cmd build-omp build-mpi build-target-omp build-target-cmd build-target-mpi
-
-update:
-	scp $(MYHOST):$(MYURL){*.c,Makefile,*.lsf} .
 
 clean:
 	-rm -f *.exe
@@ -38,10 +34,10 @@ build-target-mpi:
 
 # RUN
 
-run-cmd:
-	$(MYPATH)$(SOFTW)_cmd.exe ./$(TARGET)_cmd.exe
-run-omp:
-	export OMP_NUM_THREADS=2; $(MYPATH)$(SOFTW)_omp.exe ./$(TARGET)_omp.exe
+run-cmd: build-target-cmd build-cmd
+	./$(SOFTW)_cmd.exe ./$(TARGET)_cmd.exe
+run-omp: build-target-omp build-omp
+	export OMP_NUM_THREADS=2; ./$(SOFTW)_omp.exe ./$(TARGET)_omp.exe
 run-mpi:
 	$(LSFPATH)bsub < $(SOFTW).lsf
 	$(LSFPATH)bjobs

@@ -10,8 +10,8 @@
 #BSUB -o memprint.%J.outerr
 #BSUB -e memprint.%J.outerr 
 #BSUB -W 0:01  
-#BSUB -q share 
-#BSUB -P 43610023
+#BSUB -q regular
+#BSUB -P SCSG0001
 
-export MP_LABELIO=yes
+#export MP_LABELIO=yes
 mpirun.lsf ./job_memusage_mpi.exe ./spare_mpi.exe -s 10000000
