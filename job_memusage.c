@@ -79,7 +79,8 @@ int main(int argc, char **argv) {
 	stop_time = time(NULL);
 	
 #ifdef COMPILE_OMP
-    #pragma omp parallel
+    fprintf(stderr, "Warning: trying to distinguish different OpenMP threads, but does not work\n");
+    #pragma omp parallel private(rank, us)
     {
 	rank = omp_get_thread_num();
 #endif
