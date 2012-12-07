@@ -114,8 +114,8 @@ int main(int argc, char **argv) {
 			fprintf(stderr, "\n\n%s ran (task #%4d). Exit status: %d. Signal: %d\n", runme, rank, exit_status, signal);
 			fprintf(stderr, "Problem getting resource usage\n");
 		} else {
-			fprintf(stderr, "Memory usage for %12s (task #%4d) is: %10d KB. Exit status: %d. Signal: %d\n", 
-				runme, rank, us.ru_maxrss, exit_status, signal);
+			fprintf(stderr, "Used memory in task %d: %.2f MiB. Exit status: %d. Signal: %d\n", 
+				rank, us.ru_maxrss/1024., exit_status, signal);
 		}
 			
 	}
