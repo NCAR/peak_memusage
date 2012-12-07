@@ -18,7 +18,7 @@
 #define MAX_REPEAT 100
 
 void printUsage(char **argv) {
-	printf("\nUsage:\n%s [-s size] [-r repetitions] [-d delay (ms)] \n\n", argv[0]);
+	fprintf(stderr, "\nUsage:\n%s [-s size] [-r repetitions] [-d delay (ms)] \n\n", argv[0]);
 	exit(1);
 }
 
@@ -34,15 +34,15 @@ int main(int argc, char **argv) {
 	
 #ifdef COMPILE_MPI
 	if(error = MPI_Init(NULL, NULL)) {
-                printf("MPI INIT error: %d", error);
+                fprintf(stderr, "MPI INIT error: %d", error);
                 return 1;
         }
         if(error = MPI_Comm_rank(MPI_COMM_WORLD, &rank)) {
-                printf("MPI RANK error: %d", error);
+                fprintf(stderr, "MPI RANK error: %d", error);
                 return 1;
         }
         if(error = MPI_Comm_size(MPI_COMM_WORLD, &poolsize)) {
-                printf("MPI SIZE error: %d", error);
+                fprintf(stderr, "MPI SIZE error: %d", error);
                 return 1;
         }
         ch_rank="task";
@@ -70,7 +70,7 @@ int main(int argc, char **argv) {
 	if (size <= 0 || size > MAX_SIZE 
 	||  repeat < 1 || repeat > MAX_REPEAT 
 	||  delay < 0) {
-		printf("size:%d, repeat:%d, delay:%f\n", size, repeat, delay);
+		fprintf(stderr, "size:%d, repeat:%d, delay:%f\n", size, repeat, delay);
 		printUsage(argv);
 	}
 
@@ -97,7 +97,7 @@ int main(int argc, char **argv) {
 	
 #ifdef COMPILE_MPI
 	if(error = MPI_Finalize()) {
-                printf("Finalize error: %d", error);
+                fprintf(stderr, "MPI FINALIZE error: %d", error);
 		return 1;
         }
 #else
