@@ -34,11 +34,11 @@ int main(int argc, char **argv) {
 	
 #ifdef COMPILE_MPI
 	if(error = MPI_Init(NULL, NULL)) {
-                printf("Init error: %d", error);
+                printf("MPI INIT error: %d", error);
                 return 1;
         }
         if(error = MPI_Comm_rank(MPI_COMM_WORLD, &rank)) {
-                printf("Rank error: %d", error);
+                printf("MPI RANK error: %d", error);
                 return 1;
         }
         if(error = MPI_Comm_size(MPI_COMM_WORLD, &poolsize)) {
