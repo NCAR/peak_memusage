@@ -71,7 +71,7 @@ int main(int argc, char **argv) {
 		printUsage(argv);
 
 	if (rank == 0)
-            fprintf(stderr, "\nRunning: %s  - Please wait...\n\n", runme);
+            fprintf(stderr, "Running: %s  - Please wait...\n\n", runme);
 	start_time = time(NULL);
 	exit_status = system(runme);
 	signal = exit_status << 8 & 255;
