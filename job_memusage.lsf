@@ -15,3 +15,8 @@
 
 #export MP_LABELIO=yes
 mpirun.lsf ./job_memusage_mpi.exe ./spare_mpi.exe -s 10000000
+
+echo "Now trying the MP_CHILD hack"
+echo
+
+mpirun.lsf ./job_memusage.exe ./spare_mpi.exe -s 10000000

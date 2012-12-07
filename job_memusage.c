@@ -46,8 +46,16 @@ int main(int argc, char **argv) {
                 return 1;
         }
 #else
-    rank = 0;
-    poolsize = 1;
+        char *value_child, *value_procs;
+	value_child = getenv ("MP_CHILD");
+	value_procs = getenv ("MP_PROCS");
+	if ((! value_child) || (! value_procs)) {
+		rank = 0;
+		poolsize = 1;
+	} else {
+		rank = atoi(value_child);
+		poolsize = atoi(value_procs);
+	}
 #endif
 
 	if (argc > 1) {
