@@ -28,7 +28,7 @@ void printUsage(char **argv) {
 
 int main(int argc, char **argv) {
 	struct rusage us, ous;	/* resource us struct */
-	char *runme, space = ' ';
+	char *runme, *space = " ";
 	time_t start_time, stop_time;
 	int detailed = 0, error, exit_status, signal, rank, poolsize;
 
@@ -76,7 +76,7 @@ int main(int argc, char **argv) {
 		runme = malloc(total_size * sizeof(char));
 		strcpy(runme, argv[current_arg]);
 		for (current_arg++; current_arg<argc; current_arg++) {
-			strcat(runme, &space);
+			strcat(runme, space);
 			strcat(runme, argv[current_arg]);
 		}
 	}
