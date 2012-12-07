@@ -1,5 +1,38 @@
 ********************************************************************
 
+v1.0
+
+* Linux kernel v2.6.9 fixed the outstanding issues preventing this
+  tool from working on linux, so this version has been ported
+  to the linux+gcc arch
+
+* The output has been made more clear and compact
+
+* A few bugs (mostly related to the seldom used OpenMP version) have
+  been fixed
+
+* The serial version is now able to provide MPI information without
+  using any MPI call
+
+* The report now it's printed in stderr
+
+********************************************************************
+
+v0.9
+
+* returns the program exit code and the signal sent to it, if
+  any
+
+
+********************************************************************
+
+v0.8
+
+Minor changes in the output, in the help message and in the
+build process
+
+********************************************************************
+
 v0.72
 $Date$
 $Author$
