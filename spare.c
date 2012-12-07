@@ -85,9 +85,10 @@ int main(int argc, char **argv) {
 #endif
 	for(i=0; i<repeat; i++) {
 		last = size *(rank+1); /* every rank will have a different number */
-		printf("Allocating and filling space for %d integers in %s %d \n", last, ch_rank, rank);
+                int amount = last*sizeof(int);
+		printf("Allocating and using %d ints (%.2f MiB) in %s %d \n", last, amount/1048576., ch_rank, rank);
 
-		spare_data = malloc(last*sizeof(int));
+		spare_data = malloc(amount);
 		for (j=0; j<last; j++)
 			spare_data[j] = 24;
 		usleep(delay * 1000);
