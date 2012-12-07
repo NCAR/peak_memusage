@@ -7,8 +7,8 @@
 #BSUB -n 4                
 #BSUB -R "span[ptile=4]"
 #BSUB -J davide_memprint  
-#BSUB -o memprint.%J.outerr
-#BSUB -e memprint.%J.outerr 
+#BSUB -o memprint.%J.out
+#BSUB -e memprint.%J.err 
 #BSUB -W 0:01  
 #BSUB -q regular
 #BSUB -P SCSG0001
