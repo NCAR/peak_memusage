@@ -30,7 +30,7 @@ int main(int argc, char **argv) {
 	struct rusage us;	/* resource us struct */
 	char *runme, space = ' ';
 	time_t start_time, stop_time;
-	int detailed = 0, error, exit_status, signal, rank;
+	int detailed = 0, error, exit_status, signal, rank, poolsize;
 
 #ifdef COMPILE_MPI 
 	if(error = MPI_Init(NULL, NULL)) {
@@ -41,8 +41,13 @@ int main(int argc, char **argv) {
                 fprintf(stderr, "MPI RANK error: %d", error);
                 return 1;
         }
+        if(error = MPI_Comm_size(MPI_COMM_WORLD, &poolsize)) {
+                fprintf(stderr, "MPI SIZE error: %d", error);
+                return 1;
+        }
 #else
     rank = 0;
+    poolsize = 1;
 #endif
 
 	if (argc > 1) {
@@ -83,6 +88,7 @@ int main(int argc, char **argv) {
     #pragma omp parallel private(rank, us)
     {
 	rank = omp_get_thread_num();
+        poolsize = omp_get_num_threads();
 #endif
 	
 	if (detailed) {
@@ -115,8 +121,8 @@ int main(int argc, char **argv) {
 			fprintf(stderr, "\n\n%s ran (task #%4d). Exit status: %d. Signal: %d\n", runme, rank, exit_status, signal);
 			fprintf(stderr, "Problem getting resource usage\n");
 		} else {
-			fprintf(stderr, "Used memory in task %d: %.2f MiB. Exit status: %d. Signal: %d\n", 
-				rank, us.ru_maxrss/1024., exit_status, signal);
+			fprintf(stderr, "Used memory in task %d/%d: %.2f MiB. Exit status: %d. Signal: %d\n", 
+				rank, poolsize, us.ru_maxrss/1024., exit_status, signal);
 		}
 			
 	}
