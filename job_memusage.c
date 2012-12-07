@@ -20,9 +20,9 @@ $Id$
 void printUsage(char **argv) {
 /*	The details options has been removed from the help, because it was
         confusing for the users
-        printf("\nUsage:\n%s [--details] <filename-to-run> [<arguments-to-pass>] \n\n", argv[0]);
+        fprintf(stderr, "\nUsage:\n%s [--details] <filename-to-run> [<arguments-to-pass>] \n\n", argv[0]);
 */
-        printf("\nUsage:\n%s <filename-to-run> [<arguments-to-pass>] \n\n", argv[0]);
+        fprintf(stderr, "\nUsage:\n%s <filename-to-run> [<arguments-to-pass>] \n\n", argv[0]);
 	exit(1);
 }
 
@@ -34,11 +34,11 @@ int main(int argc, char **argv) {
 
 #ifdef COMPILE_MPI 
 	if(error = MPI_Init(NULL, NULL)) {
-                printf("Init error: %d", error);
+                fprintf(stderr, "MPI INIT error: %d", error);
                 return 1;
         }
         if(error = MPI_Comm_rank(MPI_COMM_WORLD, &rank)) {
-                printf("Rank error: %d", error);
+                fprintf(stderr, "MPI RANK error: %d", error);
                 return 1;
         }
 #else
@@ -56,7 +56,7 @@ int main(int argc, char **argv) {
 		for(; curr_arg_ct<argc; curr_arg_ct++)
 			total_size += strlen(argv[curr_arg_ct]) + 1;
 		/* "+ 1" means ' ' or last '/0'
-		printf("Allocating %d bytes for arguments", 
+		fprintf(stderr, "Allocating %d bytes for arguments", 
 			total_size * sizeof(char));
 		*/
 		
@@ -71,7 +71,7 @@ int main(int argc, char **argv) {
 		printUsage(argv);
 
 	if (rank == 0)
-            printf("\nRunning: %s  - Please wait...\n\n", runme);
+            fprintf(stderr, "\nRunning: %s  - Please wait...\n\n", runme);
 	start_time = time(NULL);
 	exit_status = system(runme);
 	signal = exit_status << 8 & 255;
@@ -85,36 +85,36 @@ int main(int argc, char **argv) {
 #endif
 	
 	if (detailed) {
-		printf("Memory usage:\n%12s %12s %12s %12s %12s %12s %12s %12s %12s\n",
+		fprintf(stderr, "Memory usage:\n%12s %12s %12s %12s %12s %12s %12s %12s %12s\n",
 			"Time(s)", "Resident (KB)", "Code", "Allocated", "Stack",
 			"Task #", "Exit Status", "Signal", "command line");
 		
 		if ( getrusage(RUSAGE_SELF, &us) ) {
-			printf("\n\n%s ran (task #%4d). Exit status: %d. Signal: %d\n", runme, rank, exit_status, signal);
-			printf("Problems getting resource usage for RUSAGE_SELF\n");
+			fprintf(stderr, "\n\n%s ran (task #%4d). Exit status: %d. Signal: %d\n", runme, rank, exit_status, signal);
+			fprintf(stderr, "Problems getting resource usage for RUSAGE_SELF\n");
 		}
 		else {
-			printf("%12.3f %12d %12d %12d %12d %12d %12d %12d %12s (RUSAGE_SELF)\n",
+			fprintf(stderr, "%12.3f %12d %12d %12d %12d %12d %12d %12d %12s (RUSAGE_SELF)\n",
 				difftime(stop_time, start_time), 
 				us.ru_maxrss, us.ru_ixrss, us.ru_idrss, us.ru_isrss,
 				rank, exit_status, signal, runme);
 		}
 		if ( getrusage(RUSAGE_CHILDREN, &us) ) {
-			printf("\n\n%s ran (task #%4d). Exit status: %d. Signal: %d\n", runme, rank, exit_status, signal);
-			printf("Problems getting resource usage for RUSAGE_CHILDREN\n\n");
+			fprintf(stderr, "\n\n%s ran (task #%4d). Exit status: %d. Signal: %d\n", runme, rank, exit_status, signal);
+			fprintf(stderr, "Problems getting resource usage for RUSAGE_CHILDREN\n\n");
 		}
 		else {
-			printf("%12.3f %12d %12d %12d %12d %12d %12d %12d %12s (RUSAGE_CHILDREN)\n\n",
+			fprintf(stderr, "%12.3f %12d %12d %12d %12d %12d %12d %12d %12s (RUSAGE_CHILDREN)\n\n",
 				difftime(stop_time, start_time), 
 				us.ru_maxrss, us.ru_ixrss, us.ru_idrss, us.ru_isrss,
 				rank, exit_status, signal, runme);
 		}
 	} else {
 		if ( getrusage(RUSAGE_CHILDREN, &us) ) {
-			printf("\n\n%s ran (task #%4d). Exit status: %d. Signal: %d\n", runme, rank, exit_status, signal);
-			printf("Problem getting resource usage\n");
+			fprintf(stderr, "\n\n%s ran (task #%4d). Exit status: %d. Signal: %d\n", runme, rank, exit_status, signal);
+			fprintf(stderr, "Problem getting resource usage\n");
 		} else {
-			printf("Memory usage for %12s (task #%4d) is: %10d KB. Exit status: %d. Signal: %d\n", 
+			fprintf(stderr, "Memory usage for %12s (task #%4d) is: %10d KB. Exit status: %d. Signal: %d\n", 
 				runme, rank, us.ru_maxrss, exit_status, signal);
 		}
 			
@@ -122,7 +122,7 @@ int main(int argc, char **argv) {
 	
 #ifdef COMPILE_MPI 
 	if(error = MPI_Finalize()) {
-                printf("Finalize error: %d", error);
+                fprintf(stderr, "MPI FINALIZE error: %d", error);
         }
 #elif defined COMPILE_OMP
     }
