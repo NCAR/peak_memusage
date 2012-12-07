@@ -32,6 +32,19 @@ int main(int argc, char **argv) {
 	time_t start_time, stop_time;
 	int detailed = 0, error, exit_status, signal, rank;
 
+#ifdef COMPILE_MPI 
+	if(error = MPI_Init(NULL, NULL)) {
+                printf("Init error: %d", error);
+                return 1;
+        }
+        if(error = MPI_Comm_rank(MPI_COMM_WORLD, &rank)) {
+                printf("Rank error: %d", error);
+                return 1;
+        }
+#else
+    rank = 0;
+#endif
+
 	if (argc > 1) {
 		int current_arg = 1;
 		if (strcmp(argv[current_arg], "--details") == 0) {
@@ -57,33 +70,18 @@ int main(int argc, char **argv) {
 	else 
 		printUsage(argv);
 
-	printf("\nRunning: %s \nPlease wait...\n\n", runme);
+	if (rank == 0)
+            printf("\nRunning: %s  - Please wait...\n\n", runme);
 	start_time = time(NULL);
 	exit_status = system(runme);
 	signal = exit_status << 8 & 255;
 	exit_status = exit_status >> 8 & 255;
 	stop_time = time(NULL);
 	
-#ifdef COMPILE_MPI 
-	if(error = MPI_Init(NULL, NULL)) {
-                printf("Init error: %d", error);
-                return 1;
-        }
-        if(error = MPI_Comm_rank(MPI_COMM_WORLD, &rank)) {
-                printf("Rank error: %d", error);
-                return 1;
-        }
-	if(error = MPI_Finalize()) {
-                printf("Finalize error: %d", error);
-        }
-#else	
-  #ifdef COMPILE_OMP
+#ifdef COMPILE_OMP
     #pragma omp parallel
     {
 	rank = omp_get_thread_num();
-  #else
-    rank = 0;
-  #endif
 #endif
 	
 	if (detailed) {
@@ -122,7 +120,11 @@ int main(int argc, char **argv) {
 			
 	}
 	
-#ifdef COMPILE_OMP
+#ifdef COMPILE_MPI 
+	if(error = MPI_Finalize()) {
+                printf("Finalize error: %d", error);
+        }
+#elif defined COMPILE_OMP
     }
 #endif
 	
