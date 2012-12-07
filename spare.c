@@ -29,7 +29,7 @@ void parseInt(int *data, char *param) {
 
 int main(int argc, char **argv) {
 	int i, j, last, size = DEFAULT_SIZE, repeat = 1, delay=1000;
-	int *spare_data, c, error, rank;
+	int *spare_data, c, error, rank, poolsize;
 	char *ch_size = NULL, *ch_repeat = NULL, *ch_delay=NULL;
 	
 #ifdef COMPILE_MPI
@@ -41,14 +41,10 @@ int main(int argc, char **argv) {
                 printf("Rank error: %d", error);
                 return 1;
         }
-#else
-  #ifdef COMPILE_OMP
-    #pragma omp parallel
-    {
-	rank = omp_get_thread_num();
-  #else
-    rank = 0;
-  #endif
+        if(error = MPI_Comm_size(MPI_COMM_WORLD, &poolsize)) {
+                printf("MPI SIZE error: %d", error);
+                return 1;
+        }
 #endif
 
 	while ((c = getopt (argc, argv, "s:r:d:")) != -1) {
@@ -76,10 +72,19 @@ int main(int argc, char **argv) {
 		printf("size:%d, repeat:%d, delay:%f\n", size, repeat, delay);
 		printUsage(argv);
 	}
-	
+
+#ifdef COMPILE_OMP
+    #pragma omp parallel default(none) private(rank, poolsize, i, j, last, spare_data) shared(size, delay, repeat)
+    {
+	rank = omp_get_thread_num();
+	poolsize = omp_get_num_threads();
+#elif !defined COMPILE_MPI
+        rank = 0;
+        poolsize = 1;
+#endif
 	for(i=0; i<repeat; i++) {
 		last = size *(rank+1); /* every rank will have a different number */
-		printf("Allocating and filling space for %d integers in rank %d \n", last, rank);
+		printf("Allocating and filling space for %d integers in task %d \n", last, rank);
 
 		spare_data = malloc(last*sizeof(int));
 		for (j=0; j<last; j++)
