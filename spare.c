@@ -86,13 +86,14 @@ int main(int argc, char **argv) {
 	for(i=0; i<repeat; i++) {
 		last = size *(rank+1); /* every rank will have a different number */
                 int amount = last*sizeof(int);
-		printf("Allocating and using %d ints (%.2f MiB) in %s %d/%d\n", last, amount/1048576., ch_rank, rank, poolsize);
+		printf("Allocating, using and freeing %d ints (%.2f MiB) in %s %d/%d\n", last, amount/1048576., ch_rank, rank, poolsize);
 
 		spare_data = malloc(amount);
 		for (j=0; j<last; j++)
 			spare_data[j] = 24;
 		usleep(delay * 1000);
 	}
+        free(spare_data);
 	
 #ifdef COMPILE_MPI
 	if(error = MPI_Finalize()) {
