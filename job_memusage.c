@@ -27,7 +27,7 @@ void printUsage(char **argv) {
 }
 
 int main(int argc, char **argv) {
-	struct rusage us;	/* resource us struct */
+	struct rusage us, ous;	/* resource us struct */
 	char *runme, space = ' ';
 	time_t start_time, stop_time;
 	int detailed = 0, error, exit_status, signal, rank, poolsize;
@@ -117,12 +117,12 @@ int main(int argc, char **argv) {
 				rank, exit_status, signal, runme);
 		}
 	} else {
-		if ( getrusage(RUSAGE_CHILDREN, &us) ) {
+		if ( getrusage(RUSAGE_CHILDREN, &us) || getrusage(RUSAGE_SELF, &ous) ) {
 			fprintf(stderr, "\n\n%s ran (task #%4d). Exit status: %d. Signal: %d\n", runme, rank, exit_status, signal);
 			fprintf(stderr, "Problem getting resource usage\n");
 		} else {
-			fprintf(stderr, "Used memory in task %d/%d: %.2f MiB. Exit status: %d. Signal: %d\n", 
-				rank, poolsize, us.ru_maxrss/1024., exit_status, signal);
+			fprintf(stderr, "Used memory in task %d/%d: %.2fMiB (+%.2fMiB overhead). ExitStatus: %d. Signal: %d\n", 
+				rank, poolsize, us.ru_maxrss/1024., ous.ru_maxrss/1024., exit_status, signal);
 		}
 			
 	}
