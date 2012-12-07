@@ -11,36 +11,39 @@ CCOMP=gcc -U COMPILE_MPI -D COMPILE_OMP -fopenmp
 CCCMD=gcc -U COMPILE_MPI -U COMPILE_OMP
 
 
-all: clean build-cmd build-omp build-mpi build-target-omp build-target-cmd build-target-mpi
+build-all: build-serial build-omp build-mpi
+build-serial: $(SOFTW).exe $(TARGET).exe
+build-omp: $(SOFTW)_omp.exe $(TARGET)_omp.exe
+build-mpi: $(SOFTW)_mpi.exe $(TARGET)_mpi.exe
 
 clean:
 	-rm -f *.exe
 
 # BUILD
 
-build-cmd:
-	$(CCCMD) $(SOFTW).c -o $(SOFTW)_cmd.exe
-build-omp:
-	$(CCOMP) $(SOFTW).c -o $(SOFTW)_omp.exe
-build-mpi:
-	$(CCMPI) $(SOFTW).c -o $(SOFTW)_mpi.exe
+$(SOFTW).exe: $(SOFTW).c
+	$(CCCMD) $? -o $@
+$(SOFTW)_omp.exe: $(SOFTW).c
+	$(CCOMP) $? -o $@
+$(SOFTW)_mpi.exe: $(SOFTW).c
+	$(CCMPI) $? -o $@
 	
-build-target-cmd:
-	$(CCCMD) -g $(TARGET).c -o $(TARGET)_cmd.exe
-build-target-omp:
-	$(CCOMP) -g $(TARGET).c -o $(TARGET)_omp.exe
-build-target-mpi:
-	$(CCMPI) -g $(TARGET).c -o $(TARGET)_mpi.exe
+$(TARGET).exe: $(TARGET).c
+	$(CCCMD) -g $? -o $@
+$(TARGET)_omp.exe: $(TARGET).c
+	$(CCOMP) -g $? -o $@
+$(TARGET)_mpi.exe: $(TARGET).c
+	$(CCMPI) -g $? -o $@
 
 # RUN
 
-run-cmd: build-target-cmd build-cmd
-	./$(SOFTW)_cmd.exe ./$(TARGET)_cmd.exe
-run-omp: build-target-omp build-omp
+run-serial: build-serial
+	./$(SOFTW).exe ./$(TARGET).exe
+run-omp: build-omp
 	export OMP_NUM_THREADS=2; ./$(SOFTW)_omp.exe ./$(TARGET)_omp.exe
-run-mpi:
+run-mpi: build-mpi
 	$(LSFPATH)bsub < $(SOFTW).lsf
 	$(LSFPATH)bjobs
 	
 repeat:
-	while [ 1 ]; do make -s run-cmd;  sleep 3; done 
+	while [ 1 ]; do make -s run-serial;  sleep 3; done 
