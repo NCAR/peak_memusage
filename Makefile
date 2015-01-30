@@ -1,12 +1,9 @@
 #
 # $Id$
 #
-SOFTW=job_memusage
-TARGET=spare
-#CCMPI=/usr/bin/mpcc_r -D COMPILE_MPI
-#CCOMP=xlc_r -U COMPILE_MPI -D COMPILE_OMP -qsmp=omp
-#CCCMD=xlc_r -U COMPILE_MPI
-CCMPI=mpicc -D COMPILE_MPI -U COMPILE_OMP # eventually it should use mpigcc
+SOFTW=peak_memusage
+TARGET=use_memory
+CCMPI=mpicc -D COMPILE_MPI -U COMPILE_OMP 
 CCOMP=gcc -U COMPILE_MPI -D COMPILE_OMP -fopenmp
 CCCMD=gcc -U COMPILE_MPI -U COMPILE_OMP
 

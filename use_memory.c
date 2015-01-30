@@ -1,6 +1,6 @@
 /*
- * This is just a test, to do the first tests
- * on the actual job_memusage
+ * This is just a test, to do a sanity check
+ * on the actual peak_memusage
  * $Id$
  *
  */

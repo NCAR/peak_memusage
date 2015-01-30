@@ -92,7 +92,7 @@ int main(int argc, char **argv) {
 	stop_time = time(NULL);
 	
 #ifdef COMPILE_OMP
-    fprintf(stderr, "Warning: trying to distinguish different OpenMP threads, but does not work\n");
+    fprintf(stderr, "Warning: trying to distinguish different OpenMP threads, but this reports just the total\n");
     #pragma omp parallel private(rank, us)
     {
 	rank = omp_get_thread_num();
