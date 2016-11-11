@@ -39,8 +39,23 @@ run-serial: build-serial
 run-omp: build-omp
 	export OMP_NUM_THREADS=2; ./$(SOFTW)_omp.exe ./$(TARGET)_omp.exe
 run-mpi: build-mpi
-	$(LSFPATH)bsub < $(SOFTW).lsf
-	$(LSFPATH)bjobs
+	# This is normal MPI approach and should work
+	@if [ -z "$${MPIRUN}" ]; then \
+            echo You must set \$$MPIRUN to something like mpirun -n 4; \
+            exit 1; \
+        else \
+            echo $${MPIRUN} ./peak_memusage_mpi.exe ./use_memory_mpi.exe -s 10000000; \
+            $${MPIRUN} ./peak_memusage_mpi.exe ./use_memory_mpi.exe -s 10000000; \
+        fi
+run-mpi-hack: build-mpi
+	# This is the MP_CHILD hack and may or may not work
+	@if [ -z "$${MPIRUN}" ]; then \
+            echo You must set \$$MPIRUN to something like mpirun -n 4; \
+            exit 1; \
+        else \
+            echo $${MPIRUN} ./peak_memusage.exe ./use_memory_mpi.exe -s 10000000; \
+            $${MPIRUN} ./peak_memusage.exe ./use_memory_mpi.exe -s 10000000; \
+        fi
 	
 repeat:
 	while [ 1 ]; do make -s run-serial;  sleep 3; done 
