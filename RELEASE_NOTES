@@ -1,4 +1,12 @@
 ********************************************************************
+v1.0.2
+
+* Installation script for https://github.com/NCAR/HPCinstall/ added
+
+* Stale LSF-specific scripts removed
+
+
+********************************************************************
 v1.0.1
 
 * This is basically the same as v1.0 with minor change in the

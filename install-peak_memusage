@@ -3,7 +3,7 @@
 # and is using the modules as below
 #
 #HPCI -n peak_memusage
-#HPCI -v 1.0.1
+#HPCI -v 1.0.2
 #HPCI -x ml ncarenv gnu mpt ncarcompilers
 #HPCI -u https://github.com/NCAR/peak_memusage/
 
@@ -31,12 +31,9 @@ if [ $make_succeeded -ne 0 ]; then
   exit $make_succeeded
 fi
 
-echo "Not doing anything more yet"
-exit 1
-
 # if successfull, create directory and copy relevant files
 mkdir -p $HPCI_SW_DIR/bin
-cp something $HPCI_SW_DIR/bin
+cp peak_memusage.exe  peak_memusage_mpi.exe $HPCI_SW_DIR/bin
 cp something_else $HPCI_SW_DIR/somewhere
 
 mkdir -p $HPCI_MOD_DIR/idep/$HPCI_SW_NAME/
