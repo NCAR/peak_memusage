@@ -25,7 +25,7 @@ fi
 
 make
 make_succeeded=$?
-if [ $make_succeded -ne 0 ]; then
+if [ $make_succeeded -ne 0 ]; then
   echo "Make failed"
   exit $make_succeeded
 fi
