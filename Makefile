@@ -47,7 +47,7 @@ run-mpi: build-mpi
             echo $${MPIRUN} ./peak_memusage_mpi.exe ./use_memory_mpi.exe -s 10000000; \
             $${MPIRUN} ./peak_memusage_mpi.exe ./use_memory_mpi.exe -s 10000000; \
         fi
-run-mpi-hack: build-mpi
+run-mpi-hack: build-serial
 	# This is the MP_CHILD hack and may or may not work
 	@if [ -z "$${MPIRUN}" ]; then \
             echo You must set \$$MPIRUN to something like mpirun -n 4; \
