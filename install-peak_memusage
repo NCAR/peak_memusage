@@ -23,7 +23,8 @@ if [ $tag_checkedout -ne 0 ]; then
   exit $tag_checkedout
 fi
 
-make
+make clean
+make run-serial
 make_succeeded=$?
 if [ $make_succeeded -ne 0 ]; then
   echo "Make failed"
