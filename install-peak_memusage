@@ -39,8 +39,8 @@ mkdir -p $HPCI_SW_DIR/bin
 cp peak_memusage.exe  peak_memusage_mpi.exe $HPCI_SW_DIR/bin
 cp README.md RELEASE_NOTES LICENSE $HPCI_SW_DIR/
 
-mkdir -p $HPCI_MOD_DIR/idep/$HPCI_SW_NAME/
-cat << EOF > $HPCI_MOD_DIR/idep/$HPCI_SW_NAME/${HPCI_SW_VERSION}.lua
+mkdir -p $HPCI_MOD_DIR_CDEP/$HPCI_SW_NAME/
+cat << EOF > $HPCI_MOD_DIR_CDEP/$HPCI_SW_NAME/${HPCI_SW_VERSION}.lua
 require("posix")
 whatis("Peak Memory Usage v${HPCI_SW_VERSION}")
 
