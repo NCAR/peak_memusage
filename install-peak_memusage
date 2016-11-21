@@ -3,8 +3,8 @@
 # and is using the modules as below
 #
 #HPCI -n peak_memusage
-#HPCI -v 1.0.2
-#HPCI -x ml ncarenv gnu mpt ncarcompilers
+#HPCI -v 1.0.3
+#HPCI -x ml ncarenv intel impi ncarcompilers
 #HPCI -u https://github.com/NCAR/peak_memusage/
 
 # saving current status of the repo
@@ -25,7 +25,7 @@ fi
 
 make clean
 make run-serial
-#MPIRUN="mpirun -n 4" make run-mpi this one at the moment does not work
+MPIRUN="mpiexec.hydra -n 2" make run-mpi #this one does not work for MPT
 make build-mpi # unnecessary if the previous is uncommented
 
 make_succeeded=$?
