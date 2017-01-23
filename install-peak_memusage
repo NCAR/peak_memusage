@@ -3,7 +3,7 @@
 # and is using the modules as below
 #
 #HPCI -n peak_memusage
-#HPCI -v 1.0.3
+#HPCI -v 1.1
 #HPCI -x ml ncarenv intel ncarcompilers
 #HPCI -u https://github.com/NCAR/peak_memusage/
 
