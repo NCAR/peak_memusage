@@ -1,0 +1,14 @@
+#!/bin/bash
+#PBS -A SCSG0001
+#PBS -N silly
+#PBS -l walltime=00:01:00
+#PBS -l select=10:ncpus=36:mpiprocs=36
+#PBS -q regular
+#PBS -j oe         
+#PBS -V
+
+export MPI_SHEPHERD=true
+
+#mpiexec_mpt ./merda.sh
+#./peak_memusage.exe ./use_memory.exe 
+mpiexec_mpt ./peak_memusage.exe ./use_memory_mpi.exe -s 100000

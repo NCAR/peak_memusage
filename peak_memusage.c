@@ -28,7 +28,7 @@ void printUsage(char **argv) {
 
 int main(int argc, char **argv) {
 	struct rusage us, ous;	/* resource us struct */
-	char *runme, *space = " ";
+	char *runme, *space = " ", *extra = "; sleep 1";
 	time_t start_time, stop_time;
 	int detailed = 0, error, exit_status, signal, rank, poolsize;
 
@@ -72,6 +72,7 @@ int main(int argc, char **argv) {
 		fprintf(stderr, "Allocating %d bytes for arguments", 
 			total_size * sizeof(char));
 		*/
+                total_size += strlen(extra);
 		
 		runme = malloc(total_size * sizeof(char));
 		strcpy(runme, argv[current_arg]);
@@ -79,12 +80,13 @@ int main(int argc, char **argv) {
 			strcat(runme, space);
 			strcat(runme, argv[current_arg]);
 		}
+                strcat(runme, extra);
 	}
 	else 
 		printUsage(argv);
 
 	if (rank == 0)
-            fprintf(stderr, "Running: %s  - Please wait...\n\n", runme);
+            fprintf(stderr, "Running: %s  - Please wait...\n", runme);
 	start_time = time(NULL);
 	exit_status = system(runme);
 	signal = exit_status << 8 & 255;
