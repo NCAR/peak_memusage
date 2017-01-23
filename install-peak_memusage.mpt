@@ -1,0 +1,60 @@
+#!/usr/bin/env bash
+# This install script assumes one is installing with https://github.com/NCAR/HPCinstall/
+# and is using the modules as below
+#
+#HPCI -n peak_memusage
+#HPCI -v 1.0.3
+#HPCI -x ml ncarenv intel impi ncarcompilers
+#HPCI -u https://github.com/NCAR/peak_memusage/
+
+# saving current status of the repo
+branch=$(git symbolic-ref --short -q HEAD)
+if [ -z "${branch}" ]; then
+  tag=$(git name-rev --name-only --tags --no-undefined HEAD 2>/dev/null | sed -n 's/^\([^^~]\{1,\}\)\(\^0\)\{0,1\}$/\1/p')
+  branch=tags/${tag}
+fi
+
+# switching to desired version
+git checkout -q tags/v${HPCI_SW_VERSION}
+
+tag_checkedout=$?
+if [ $tag_checkedout -ne 0 ]; then
+  echo "Can't checkout version ${HPCI_SW_VERSION} aborting"
+  exit $tag_checkedout
+fi
+
+make clean
+make run-serial
+MPIRUN="mpiexec.hydra -n 2" make run-mpi #this one does not work for MPT
+make build-mpi # unnecessary if the previous is uncommented
+
+make_succeeded=$?
+if [ $make_succeeded -ne 0 ]; then
+  echo "Make failed"
+  exit $make_succeeded
+fi
+
+# if successfull, create directory and copy relevant files
+mkdir -p $HPCI_SW_DIR/bin
+cp peak_memusage.exe  peak_memusage_mpi.exe $HPCI_SW_DIR/bin
+cp README.md RELEASE_NOTES LICENSE $HPCI_SW_DIR/
+
+mkdir -p $HPCI_MOD_DIR_CDEP/$HPCI_SW_NAME/
+cat << EOF > $HPCI_MOD_DIR_CDEP/$HPCI_SW_NAME/${HPCI_SW_VERSION}.lua
+require("posix")
+whatis("Peak Memory Usage v${HPCI_SW_VERSION}")
+
+help([[
+This module loads the peak_memusage tool version v${HPCI_SW_VERSION}
+Use it like this:
+  - sequential: job_memusage.exe program_name
+  - parallel batch jobs: mpiexec_mpt job_memusage.exe program_name
+See "Checking memory use" in the Yellowstone documentation:
+https://www2.cisl.ucar.edu/resources/yellowstone/using_resources/runningjobs/check_memory
+]])
+
+append_path("PATH","$HPCI_SW_DIR/bin")
+EOF
+
+echo You may restore the previous status of the repo with
+echo git checkout $branch
