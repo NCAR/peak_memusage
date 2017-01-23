@@ -10,8 +10,8 @@ CCCMD=gcc -U COMPILE_MPI -U COMPILE_OMP
 
 build-all: build-serial build-omp build-mpi
 build-serial: $(SOFTW).exe $(TARGET).exe
-build-omp: $(SOFTW)_omp.exe $(TARGET)_omp.exe
-build-mpi: $(SOFTW)_mpi.exe $(TARGET)_mpi.exe
+build-omp: $(SOFTW).exe $(TARGET)_omp.exe
+build-mpi: $(SOFTW).exe $(TARGET)_mpi.exe
 
 clean:
 	-rm -f *.exe
@@ -20,8 +20,7 @@ clean:
 
 $(SOFTW).exe: $(SOFTW).c
 	$(CCCMD) $? -o $@
-$(SOFTW)_omp.exe: $(SOFTW).c
-	$(CCOMP) $? -o $@
+# This is normal MPI approach, which I am not using anymore
 $(SOFTW)_mpi.exe: $(SOFTW).c
 	$(CCMPI) $? -o $@
 	
@@ -37,9 +36,9 @@ $(TARGET)_mpi.exe: $(TARGET).c
 run-serial: build-serial
 	./$(SOFTW).exe ./$(TARGET).exe
 run-omp: build-omp
-	export OMP_NUM_THREADS=2; ./$(SOFTW)_omp.exe ./$(TARGET)_omp.exe
+	export OMP_NUM_THREADS=2; ./$(SOFTW) ./$(TARGET)_omp.exe
 run-mpi: build-mpi
-	# This is normal MPI approach and should work
+	# This is normal MPI approach, which I am not using anymore
 	@if [ -z "$${MPIRUN}" ]; then \
             echo You must set \$$MPIRUN to something like mpirun -n 4; \
             exit 1; \
@@ -48,7 +47,7 @@ run-mpi: build-mpi
             $${MPIRUN} ./peak_memusage_mpi.exe ./use_memory_mpi.exe -s 10000000; \
         fi
 run-mpi-hack: build-serial
-	# This is the MP_CHILD hack and may or may not work
+	# This is the embarassing parallel hack and may or may not work
 	@if [ -z "$${MPIRUN}" ]; then \
             echo You must set \$$MPIRUN to something like mpirun -n 4; \
             exit 1; \

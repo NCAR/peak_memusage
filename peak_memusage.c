@@ -107,14 +107,6 @@ int main(int argc, char **argv) {
 	exit_status = exit_status >> 8 & 255;
 	stop_time = time(NULL);
 	
-#ifdef COMPILE_OMP
-    fprintf(stderr, "Warning: trying to distinguish different OpenMP threads, but this reports just the total\n");
-    #pragma omp parallel private(rank, us)
-    {
-	rank = omp_get_thread_num();
-        poolsize = omp_get_num_threads();
-#endif
-	
 	if (detailed) {
 		fprintf(stderr, "Memory usage:\n%12s %12s %12s %12s %12s %12s %12s %12s %12s\n",
 			"Time(s)", "Resident (KB)", "Code", "Allocated", "Stack",
@@ -155,8 +147,6 @@ int main(int argc, char **argv) {
 	if(error = MPI_Finalize()) {
                 fprintf(stderr, "MPI FINALIZE error: %d", error);
         }
-#elif defined COMPILE_OMP
-    }
 #endif
 	
 	return exit_status;
