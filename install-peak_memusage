@@ -35,7 +35,7 @@ fi
 
 # if successfull, create directory and copy relevant files
 mkdir -p $HPCI_SW_DIR/bin
-cp peak_memusage.exe  peak_memusage_mpi.exe $HPCI_SW_DIR/bin
+cp peak_memusage.exe  $HPCI_SW_DIR/bin
 cp README.md RELEASE_NOTES LICENSE $HPCI_SW_DIR/
 
 mkdir -p $HPCI_MOD_DIR_IDEP/$HPCI_SW_NAME/
