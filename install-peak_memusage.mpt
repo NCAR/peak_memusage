@@ -4,7 +4,7 @@
 #
 #HPCI -n peak_memusage
 #HPCI -v 1.0.3
-#HPCI -x ml ncarenv intel impi ncarcompilers
+#HPCI -x ml ncarenv intel mpt ncarcompilers
 #HPCI -u https://github.com/NCAR/peak_memusage/
 
 # saving current status of the repo
@@ -25,7 +25,7 @@ fi
 
 make clean
 make run-serial
-MPIRUN="mpiexec.hydra -n 2" make run-mpi #this one does not work for MPT
+MPIRUN="mpiexec_mpt -n 4" make run-mpi
 make build-mpi # unnecessary if the previous is uncommented
 
 make_succeeded=$?
