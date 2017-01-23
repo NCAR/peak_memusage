@@ -46,15 +46,29 @@ int main(int argc, char **argv) {
                 return 1;
         }
 #else
-        char *value_child, *value_procs;
-	value_child = getenv ("MP_CHILD");
-	value_procs = getenv ("MP_PROCS");
-	if ((! value_child) || (! value_procs)) {
+        char *value_child_mp, *value_procs_mp, *value_rank_pmi, *value_ncpus;
+	value_child_mp = getenv ("MP_CHILD");
+        value_rank_pmi = getenv ("PMI_RANK");
+
+	value_procs_mp = getenv ("MP_PROCS");
+        value_ncpus    = getenv ("NCPUS");
+
+	if (  ((! value_child_mp) && (! value_rank_pmi))
+           || ((! value_procs_mp) && (! value_ncpus))
+           ) {
 		rank = 0;
 		poolsize = 1;
 	} else {
-		rank = atoi(value_child);
-		poolsize = atoi(value_procs);
+                if (value_child_mp) {
+                    rank = atoi(value_child_mp);
+                } else {
+                    rank = atoi(value_rank_pmi);
+                }
+                if (value_procs_mp) {
+		    poolsize = atoi(value_procs_mp);
+                } else {
+		    poolsize = atoi(value_ncpus);
+                }
 	}
 #endif
 
