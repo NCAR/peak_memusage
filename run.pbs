@@ -2,8 +2,8 @@
 #PBS -A SCSG0001
 #PBS -N silly
 #PBS -l walltime=00:01:00
-#PBS -l select=10:ncpus=36:mpiprocs=36
-#PBS -q regular
+#PBS -l select=5:ncpus=36:mpiprocs=36
+#PBS -q premium
 #PBS -j oe         
 #PBS -V
 
