@@ -4,7 +4,7 @@
 #
 #HPCI -n peak_memusage
 #HPCI -v 1.0.3
-#HPCI -x ml ncarenv intel impi ncarcompilers
+#HPCI -x ml ncarenv intel ncarcompilers
 #HPCI -u https://github.com/NCAR/peak_memusage/
 
 # saving current status of the repo
@@ -23,10 +23,9 @@ if [ $tag_checkedout -ne 0 ]; then
   exit $tag_checkedout
 fi
 
-make clean
-make run-serial
-MPIRUN="mpiexec.hydra -n 2" make run-mpi #this one does not work for MPT
-make build-mpi # unnecessary if the previous is uncommented
+ml mpt # for testing purposes only
+
+make clean && make run-serial && echo 'Get an interactive session and try MPIRUN="mpiexec_mpt -n 4" make run-mpi'
 
 make_succeeded=$?
 if [ $make_succeeded -ne 0 ]; then
@@ -39,8 +38,8 @@ mkdir -p $HPCI_SW_DIR/bin
 cp peak_memusage.exe  peak_memusage_mpi.exe $HPCI_SW_DIR/bin
 cp README.md RELEASE_NOTES LICENSE $HPCI_SW_DIR/
 
-mkdir -p $HPCI_MOD_DIR_CDEP/$HPCI_SW_NAME/
-cat << EOF > $HPCI_MOD_DIR_CDEP/$HPCI_SW_NAME/${HPCI_SW_VERSION}.lua
+mkdir -p $HPCI_MOD_DIR_IDEP/$HPCI_SW_NAME/
+cat << EOF > $HPCI_MOD_DIR_IDEP/$HPCI_SW_NAME/${HPCI_SW_VERSION}.lua
 require("posix")
 whatis("Peak Memory Usage v${HPCI_SW_VERSION}")
 
