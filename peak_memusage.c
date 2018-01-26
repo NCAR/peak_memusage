@@ -46,26 +46,32 @@ int main(int argc, char **argv) {
                 return 1;
         }
 #else
-        char *value_child_mp, *value_procs_mp, *value_rank_pmi, *value_ncpus;
-	value_child_mp = getenv ("MP_CHILD");
-        value_rank_pmi = getenv ("PMI_RANK");
+        char *value_child_mp, *value_procs_mp, *value_slurm_rank, *value_rank_pmi, *value_ncpus, *value_slurm_tasks;
+	value_child_mp    = getenv ("MP_CHILD");
+        value_rank_pmi    = getenv ("PMI_RANK");
+        value_slurm_rank  = getenv ("SLURM_PROCID");
 
-	value_procs_mp = getenv ("MP_PROCS");
-        value_ncpus    = getenv ("NCPUS");
+	value_procs_mp    = getenv ("MP_PROCS");
+        value_ncpus       = getenv ("NCPUS");
+        value_slurm_tasks = getenv ("SLURM_NTASKS");
 
-	if (  ((! value_child_mp) && (! value_rank_pmi))
-           || ((! value_procs_mp) && (! value_ncpus))
+	if (  ( (! value_child_mp) && (! value_rank_pmi) && (! value_slurm_rank) )
+           || ( (! value_procs_mp) && (! value_ncpus) && (! value_slurm_tasks) )
            ) {
 		rank = 0;
 		poolsize = 1;
 	} else {
                 if (value_child_mp) {
                     rank = atoi(value_child_mp);
+                } else if (value_slurm_rank) {
+                    rank = atoi(value_slurm_rank);
                 } else {
                     rank = atoi(value_rank_pmi);
                 }
                 if (value_procs_mp) {
 		    poolsize = atoi(value_procs_mp);
+                } else if (value_slurm_tasks) {
+		    poolsize = atoi(value_slurm_tasks);
                 } else {
 		    poolsize = atoi(value_ncpus);
                 }
