@@ -30,7 +30,7 @@ int main(int argc, char **argv) {
 	struct rusage us, ous;	/* resource us struct */
 	char *runme, *space = " ", *extra = "; sleep 1";
 	time_t start_time, stop_time;
-	int detailed = 0, error, exit_status, signal, rank, poolsize;
+	int detailed = 0, error, exit_status, signal, rank /*, poolsize*/;
 
 #ifdef COMPILE_MPI 
 	if(error = MPI_Init(NULL, NULL)) {
@@ -41,25 +41,26 @@ int main(int argc, char **argv) {
                 fprintf(stderr, "MPI RANK error: %d", error);
                 return 1;
         }
-        if(error = MPI_Comm_size(MPI_COMM_WORLD, &poolsize)) {
+/*        if(error = MPI_Comm_size(MPI_COMM_WORLD, &poolsize)) {
                 fprintf(stderr, "MPI SIZE error: %d", error);
                 return 1;
         }
+*/
 #else
-        char *value_child_mp, *value_procs_mp, *value_slurm_rank, *value_rank_pmi, *value_ncpus, *value_slurm_tasks;
+        char *value_child_mp, *value_slurm_rank, *value_rank_pmi /*, *value_procs_mp, *value_ncpus, *value_slurm_tasks*/;
 	value_child_mp    = getenv ("MP_CHILD");
         value_rank_pmi    = getenv ("PMI_RANK");
         value_slurm_rank  = getenv ("SLURM_PROCID");
-
+/*
 	value_procs_mp    = getenv ("MP_PROCS");
         value_ncpus       = getenv ("NCPUS");
         value_slurm_tasks = getenv ("SLURM_NTASKS");
-
+*/
 	if (  ( (! value_child_mp) && (! value_rank_pmi) && (! value_slurm_rank) )
-           || ( (! value_procs_mp) && (! value_ncpus) && (! value_slurm_tasks) )
+//           || ( (! value_procs_mp) && (! value_ncpus) && (! value_slurm_tasks) )
            ) {
 		rank = 0;
-		poolsize = 1;
+//		poolsize = 1;
 	} else {
                 if (value_child_mp) {
                     rank = atoi(value_child_mp);
@@ -68,6 +69,7 @@ int main(int argc, char **argv) {
                 } else {
                     rank = atoi(value_rank_pmi);
                 }
+/*
                 if (value_procs_mp) {
 		    poolsize = atoi(value_procs_mp);
                 } else if (value_slurm_tasks) {
@@ -75,7 +77,7 @@ int main(int argc, char **argv) {
                 } else {
 		    poolsize = atoi(value_ncpus);
                 }
-	}
+*/	}
 #endif
 
 	if (argc > 1) {
@@ -143,8 +145,8 @@ int main(int argc, char **argv) {
 			fprintf(stderr, "\n\n%s ran (task #%4d). Exit status: %d. Signal: %d\n", runme, rank, exit_status, signal);
 			fprintf(stderr, "Problem getting resource usage\n");
 		} else {
-			fprintf(stderr, "Used memory in task %d/%d: %.2fMiB (+%.2fMiB overhead). ExitStatus: %d. Signal: %d\n", 
-				rank, poolsize, us.ru_maxrss/1024., ous.ru_maxrss/1024., exit_status, signal);
+			fprintf(stderr, "Used memory in task %d: %.2fMiB (+%.2fMiB overhead). ExitStatus: %d. Signal: %d\n", 
+				rank, us.ru_maxrss/1024., ous.ru_maxrss/1024., exit_status, signal);
 		}
 			
 	}
