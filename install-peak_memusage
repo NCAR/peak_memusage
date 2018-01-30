@@ -27,7 +27,7 @@ if [ $tag_checkedout -ne 0 ]; then
   exit $tag_checkedout
 fi
 
-ml mpt # for testing purposes only
+#ml mpt # for testing purposes only
 
 make clean && make run-serial && echo 'Get an interactive session and try MPIRUN="mpiexec_mpt -n 4" make run-mpi'
 
@@ -51,7 +51,7 @@ help([[
 This module loads the peak_memusage tool version v${HPCI_SW_VERSION}
 Use it like this:
   - sequential: job_memusage.exe program_name
-  - parallel batch jobs: mpiexec_mpt job_memusage.exe program_name
+  - parallel batch jobs: <mpi_launcher> job_memusage.exe program_name
 See "Checking memory use" in the Yellowstone documentation:
 https://www2.cisl.ucar.edu/resources/yellowstone/using_resources/runningjobs/check_memory
 ]])
