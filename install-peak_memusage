@@ -3,9 +3,13 @@
 # and is using the modules as below
 #
 #HPCI -n peak_memusage
-#HPCI -v 1.1
+#HPCI -v 2.0
 #HPCI -x ml ncarenv intel ncarcompilers
 #HPCI -u https://github.com/NCAR/peak_memusage/
+
+
+# terminate this script immediately should anything go wrong
+set -e
 
 # saving current status of the repo
 branch=$(git symbolic-ref --short -q HEAD)
