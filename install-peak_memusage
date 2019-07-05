@@ -4,7 +4,7 @@
 #
 #HPCI -n peak_memusage
 #HPCI -v 2.0.1
-#HPCI -x ml ncarenv intel ncarcompilers git
+#HPCI -l ncarenv intel ncarcompilers
 #HPCI -u https://github.com/NCAR/peak_memusage/
 
 
