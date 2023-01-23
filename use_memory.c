@@ -1,16 +1,20 @@
 /*
  * This is just a test, to do a sanity check
  * on the actual peak_memusage
- * $Id$
- *
  */
-
+#ifdef HAVE_CONFIG_H
+#  include "config.h"
+#endif
 #include <stdio.h>	/* print */
 #include <stdlib.h>	/* malloc */
 #include <unistd.h>     /* optarg */
 
 #ifdef COMPILE_MPI
 #include <mpi.h>
+#endif
+
+#ifdef COMPILE_OMP
+#include <omp.h>
 #endif
 
 #define MAX_SIZE 2147483647
@@ -23,15 +27,15 @@ void printUsage(char **argv) {
 }
 
 void parseInt(int *data, char *param) {
-	if (param != NULL) 
+	if (param != NULL)
 		*data = atoi(param);
 }
 
 int main(int argc, char **argv) {
 	int i, j, last, size = DEFAULT_SIZE, repeat = 1, delay=1000;
 	int *spare_data, c, error, rank, poolsize;
-	char *ch_size = NULL, *ch_repeat = NULL, *ch_delay=NULL, *ch_rank="thread"; 
-	
+	char *ch_size = NULL, *ch_repeat = NULL, *ch_delay=NULL, *ch_rank="thread";
+
 #ifdef COMPILE_MPI
 	if(error = MPI_Init(NULL, NULL)) {
                 fprintf(stderr, "MPI INIT error: %d", error);
@@ -63,12 +67,12 @@ int main(int argc, char **argv) {
 			printUsage(argv);
 		}
 	}
-	
+
 	parseInt(&size, ch_size);
 	parseInt(&repeat, ch_repeat);
 	parseInt(&delay, ch_delay);
-	if (size <= 0 || size > MAX_SIZE 
-	||  repeat < 1 || repeat > MAX_REPEAT 
+	if (size <= 0 || size > MAX_SIZE
+	||  repeat < 1 || repeat > MAX_REPEAT
 	||  delay < 0) {
 		fprintf(stderr, "size:%d, repeat:%d, delay:%f\n", size, repeat, delay);
 		printUsage(argv);
@@ -94,7 +98,7 @@ int main(int argc, char **argv) {
 		usleep(delay * 1000);
 	}
         free(spare_data);
-	
+
 #ifdef COMPILE_MPI
 	if(error = MPI_Finalize()) {
                 fprintf(stderr, "MPI FINALIZE error: %d", error);
@@ -105,6 +109,6 @@ int main(int argc, char **argv) {
   }
   #endif
 #endif
-	
+
 	return 0;
 }
