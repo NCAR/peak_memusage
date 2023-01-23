@@ -15,10 +15,6 @@
 #endif
 
 void printUsage(char **argv) {
-/*	The details options has been removed from the help, because it was
-        confusing for the users
-        fprintf(stderr, "\nUsage:\n%s [--details] <filename-to-run> [<arguments-to-pass>] \n\n", argv[0]);
-*/
         fprintf(stderr, "\nUsage:\n%s <filename-to-run> [<arguments-to-pass>] \n\n", argv[0]);
 	exit(1);
 }
@@ -31,22 +27,6 @@ int main(int argc, char **argv) {
 	int detailed = 0, error, exit_status, signal, rank=0 /*, poolsize*/;
 
         gethostname(hn, sizeof(hn) / sizeof(char));
-
-#ifdef COMPILE_MPI
-	if(error = MPI_Init(NULL, NULL)) {
-                fprintf(stderr, "MPI INIT error: %d", error);
-                return 1;
-        }
-        if(error = MPI_Comm_rank(MPI_COMM_WORLD, &rank)) {
-                fprintf(stderr, "MPI RANK error: %d", error);
-                return 1;
-        }
-/*        if(error = MPI_Comm_size(MPI_COMM_WORLD, &poolsize)) {
-                fprintf(stderr, "MPI SIZE error: %d", error);
-                return 1;
-        }
-*/
-#else
 
         // try some common env vars to learn rank:
         if (NULL != getenv("MP_CHILD"))
@@ -63,8 +43,6 @@ int main(int argc, char **argv) {
 
         else if (NULL != getenv("SLURM_PROCID"))
           rank = atoi(getenv("SLURM_PROCID"));
-
-#endif
 
 	if (argc > 1) {
 		int current_arg = 1;
@@ -136,12 +114,6 @@ int main(int argc, char **argv) {
 		}
 
 	}
-
-#ifdef COMPILE_MPI
-	if(error = MPI_Finalize()) {
-                fprintf(stderr, "MPI FINALIZE error: %d", error);
-        }
-#endif
 
 	return exit_status;
 }
