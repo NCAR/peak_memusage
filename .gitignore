@@ -12,8 +12,7 @@ INSTALL
 config.h
 config.log
 config.status
-peak_memusage.exe
-peak_memusage.o
 stamp-h1
-use_memory*.exe
-use_memory*.o
+*.exe
+*.o
+build/

@@ -38,7 +38,7 @@ echo Build user.................... : $USER
 echo
 echo Optional Dependencies:
 echo '   'OpenMP:.................... : ${enable_openmp}
-#echo '   'MPI:....................... : ${enable_mpi}
+echo '   'MPI:....................... : ${enable_mpi}
 echo
 echo '-------------------------------------------------------------------------------'
 

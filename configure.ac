@@ -30,18 +30,19 @@ if test "x$ac_cv_prog_c_openmp" != "xunsupported" && test "x$ac_cv_prog_c_openmp
 fi
 AM_CONDITIONAL([OPENMP_BUILD], [test x"$enable_openmp" = xyes])
 
-dnl AC_ARG_ENABLE(mpi,
-dnl     [  --enable-mpi            Include MPI interface.],
-dnl     [enable_mpi=$enableval],
-dnl     [enable_mpi="no"])
-dnl if test "$enable_mpi" = "yes"; then
-dnl   AX_MPI([found_mpi=yes], [found_mpi=no; enable_mpi=no])
-dnl   if test "$found_mpi" = "yes"; then
-dnl     AC_DEFINE([ENABLE_MPI], [1], [Build with MPI support])
-dnl     AC_MSG_RESULT([<<< Enabling MPI support. >>>])
-dnl   fi
-dnl fi
-dnl AM_CONDITIONAL([MPI_BUILD], [test x"$enable_mpi" = xyes])
+AC_ARG_ENABLE(mpi,
+    [  --enable-mpi            Include MPI interface.],
+    [enable_mpi=$enableval],
+    [enable_mpi="yes"])
+if test "$enable_mpi" = "yes"; then
+  AX_MPI([found_mpi=yes], [found_mpi=no; enable_mpi=no])
+  if test "$found_mpi" = "yes"; then
+    AC_DEFINE([ENABLE_MPI], [1], [Build with MPI support (really only used for test suite)])
+    AC_MSG_RESULT([<<< Enabling MPI support. >>>])
+    CC="$MPICC"
+  fi
+fi
+AM_CONDITIONAL([MPI_BUILD], [test x"$enable_mpi" = xyes])
 
 
 AC_CONFIG_FILES([
