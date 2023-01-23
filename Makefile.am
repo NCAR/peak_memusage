@@ -19,3 +19,5 @@ endif
 
 XFAIL_TESTS = tests/forgot_exe.sh
 TESTS += tests/check.sh tests/with_args.sh $(XFAIL_TESTS)
+
+EXTRA_DIST = $(TESTS)
