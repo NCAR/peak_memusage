@@ -22,13 +22,12 @@ echo '----------------------------------- SUMMARY ------------------------------
 echo
 echo Package version............... : $PACKAGE-$VERSION
 echo
-#echo C++ compiler.................. : $CXX
-#echo CXXFLAGS.......................: $CXXFLAGS
+echo C++ compiler.................. : $CXX
+echo CXXFLAGS.......................: $CXXFLAGS
 echo C compiler.................... : $CC
 echo CFLAGS.........................: $CFLAGS
-#echo Fortran compiler.............. : $FC
-#echo Fortran 77 compiler........... : $F77
-#echo FCFLAGS........................: $FCFLAGS
+echo Fortran compiler.............. : $FC
+echo FCFLAGS........................: $FCFLAGS
 echo Install dir................... : $prefix
 #echo Python install dir............ : $pythondir
 #echo PYTHONPATH.................... : $PYTHONPATH
@@ -37,9 +36,12 @@ echo Build user.................... : $USER
 ######################################################################################
 echo
 echo Optional Dependencies:
-echo '   'OpenMP:.................... : ${enable_openmp}
-echo '   'MPI:....................... : ${enable_mpi}
-echo
+echo '   OpenMP:.................... :' ${enable_openmp}
+echo '   MPI (test suite only):..... :' ${enable_mpi}
+if test "x${enable_mpi}" = "xyes"; then
+  echo '      MPICC:.................. :' ${MPICC}
+  echo '      MPIEXEC:................ :' ${MPIEXEC}
+fi
 echo '-------------------------------------------------------------------------------'
 
 echo

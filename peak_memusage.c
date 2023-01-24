@@ -10,10 +10,6 @@
 #include <unistd.h>     /* gethostname */
 #include <sys/resource.h> /* getrusage */
 
-#ifdef COMPILE_MPI
-#include <mpi.h>
-#endif
-
 void printUsage(char **argv) {
         fprintf(stderr, "\nUsage:\n%s <filename-to-run> [<arguments-to-pass>] \n\n", argv[0]);
 	exit(1);

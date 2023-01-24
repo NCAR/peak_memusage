@@ -1,36 +1,62 @@
+ACLOCAL_AMFLAGS = -I m4
+
 TESTS =
 XFAIL_TESTS =
-MPI_TESTS =
+
 bin_PROGRAMS =
 check_PROGRAMS =
+lib_LTLIBRARIES =
+
+SUBDIRS =
+
+
 
 bin_PROGRAMS += peak_memusage.exe
 peak_memusage_exe_SOURCES = peak_memusage.c
 
-#libexec_PROGRAMS = use_memory.exe
+lib_LTLIBRARIES += liblogmemoryusage.la
+liblogmemoryusage_la_SOURCES = log_memusage.c
+liblogmemoryusage_la_LIBADD = -lpthread
+
+bin_PROGRAMS += demo_log_memusage
+demo_log_memusage_SOURCES = demo_log_memusage.c
+demo_log_memusage_LDADD = liblogmemoryusage.la
+
 check_PROGRAMS += use_memory.exe
 use_memory_exe_SOURCES = use_memory.c
 
 XFAIL_TESTS += tests/forgot_exe.sh
-MPI_TESTS += tests/mpi.sh
 TESTS += tests/check.sh tests/with_args.sh $(XFAIL_TESTS)
 
 if OPENMP_BUILD
   check_PROGRAMS += use_memory_openmp.exe
   use_memory_openmp_exe_CPPFLAGS = -DCOMPILE_OMP
+  use_memory_openmp_exe_CFLAGS = $(OPENMP_CFLAGS)
   use_memory_openmp_exe_SOURCES = use_memory.c
 
   TESTS += tests/omp_threads.sh
-  MPI_TESTS += tests/mpi_omp_threads.sh
 endif
 
 if MPI_BUILD
-  check_PROGRAMS += hello_world_mpi
-  hello_world_mpi_SOURCES = hello_world_mpi.c
+  SUBDIRS += mpi
+  TESTS += tests/mpi.sh
 
-  TESTS += $(MPI_TESTS)
+if OPENMP_BUILD
+  TESTS += tests/mpi_omp_threads.sh
+endif
 endif
 
 
+EXTRA_DIST = $(TESTS)
 
-EXTRA_DIST = $(TESTS) $(MPI_TESTS)
+
+mytags:
+	if [ "x$(STR)" != "x" ]; then \
+	  echo "Tagging files containing $(STR)" ; \
+	  git grep -l $(STR) ; \
+	  etags $$(git grep -l $(STR)) ; \
+	else \
+	  echo "Tagging all git managed files:" ; \
+	  git ls-tree -r HEAD --name-only ; \
+	  etags $$(git ls-tree -r HEAD --name-only) ; \
+	fi
