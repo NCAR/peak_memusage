@@ -16,7 +16,8 @@ peak_memusage_SOURCES = peak_memusage.c
 
 lib_LTLIBRARIES += liblog_memusage.la
 liblog_memusage_la_SOURCES = log_memusage.c log_memusage.h
-liblog_memusage_la_LIBADD = -lpthread
+liblog_memusage_la_CFLAGS = $(PTHREAD_CFLAGS)
+liblog_memusage_la_LIBADD = $(PTHREAD_LIBS)
 
 include_HEADERS += log_memusage.h
 

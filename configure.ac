@@ -1,6 +1,6 @@
 AC_PREREQ([2.62]) dnl autoconf >= 2.62 for AC_OPENMP
 
-AC_INIT([peak_memusage], [2.1.0], [csgteam@ucar.edu])
+AC_INIT([peak_memusage], [3.0.0], [csgteam@ucar.edu])
 
 AC_MSG_RESULT([---------------------------------------------])
 AC_MSG_RESULT([-------- Configuring peak_memusage ----------])
@@ -29,6 +29,7 @@ LT_INIT
 AC_CONFIG_HEADERS([config.h])
 AC_CHECK_HEADERS_ONCE([sys/types.h stdio.h stdlib.h time.h string.h unistd.h sys/resource.h])
 
+AX_PTHREAD
 
 # options
 AC_OPENMP

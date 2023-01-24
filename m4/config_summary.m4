@@ -35,12 +35,17 @@ echo Build user.................... : $USER
 
 ######################################################################################
 echo
+echo Required Dependencies:
+echo '   Pthreads................... : (required)'
+echo '      PTHREAD_CC.............. :' ${PTHREAD_CC}
+echo '      PTHREAD_CFLAGS.......... :' ${PTHREAD_CFLAGS}
+echo '      PTHREAD_LIBS............ :' ${PTHREAD_LIBS}
 echo Optional Dependencies:
-echo '   OpenMP:.................... :' ${enable_openmp}
-echo '   MPI (test suite only):..... :' ${enable_mpi}
+echo '   OpenMP..................... :' ${enable_openmp}
+echo '   MPI (test suite only)...... :' ${enable_mpi}
 if test "x${enable_mpi}" = "xyes"; then
-  echo '      MPICC:.................. :' ${MPICC}
-  echo '      MPIEXEC:................ :' ${MPIEXEC}
+  echo '      MPICC................... :' ${MPICC}
+  echo '      MPIEXEC................. :' ${MPIEXEC}
 fi
 echo '-------------------------------------------------------------------------------'
 
