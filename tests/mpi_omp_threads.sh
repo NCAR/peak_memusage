@@ -13,6 +13,6 @@ export MPI_SHEPHERD=true
 export OMP_NUM_THREADS=3
 
 ${mpiexec} -n 4 ./mpi/hello_world_mpi || exit 77 # hello world isn't really a test, but if it fails, skip the real test
-${mpiexec} -n 4 ./peak_memusage.exe ./use_memory_openmp.exe || exit 1
+${mpiexec} -n 4 ./peak_memusage ./use_memory_openmp || exit 1
 
 exit 0

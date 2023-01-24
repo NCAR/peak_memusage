@@ -11,8 +11,8 @@ SUBDIRS =
 
 
 
-bin_PROGRAMS += peak_memusage.exe
-peak_memusage_exe_SOURCES = peak_memusage.c
+bin_PROGRAMS += peak_memusage
+peak_memusage_SOURCES = peak_memusage.c
 
 lib_LTLIBRARIES += liblogmemoryusage.la
 liblogmemoryusage_la_SOURCES = log_memusage.c
@@ -22,17 +22,17 @@ bin_PROGRAMS += demo_log_memusage
 demo_log_memusage_SOURCES = demo_log_memusage.c
 demo_log_memusage_LDADD = liblogmemoryusage.la
 
-check_PROGRAMS += use_memory.exe
-use_memory_exe_SOURCES = use_memory.c
+check_PROGRAMS += use_memory
+use_memory_SOURCES = use_memory.c
 
 XFAIL_TESTS += tests/forgot_exe.sh
 TESTS += tests/check.sh tests/with_args.sh $(XFAIL_TESTS)
 
 if OPENMP_BUILD
-  check_PROGRAMS += use_memory_openmp.exe
-  use_memory_openmp_exe_CPPFLAGS = -DCOMPILE_OMP
-  use_memory_openmp_exe_CFLAGS = $(OPENMP_CFLAGS)
-  use_memory_openmp_exe_SOURCES = use_memory.c
+  check_PROGRAMS += use_memory_openmp
+  use_memory_openmp_CPPFLAGS = -DCOMPILE_OMP
+  use_memory_openmp_CFLAGS = $(OPENMP_CFLAGS)
+  use_memory_openmp_SOURCES = use_memory.c
 
   TESTS += tests/omp_threads.sh
 endif
