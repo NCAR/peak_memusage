@@ -67,6 +67,7 @@ int log_memusage_parse_smaps(int verbose)
 
   if (!file) {
     perror(line);
+
     return -1;
   }
 
@@ -170,7 +171,7 @@ double log_memusage_report(const char* prefix)
 void* log_memusage_execution_thread (void* ptr)
 {
   struct timeval current_time;
-
+  int ierr = 0;
   double elapsed=0., elapsed_us=0.;
 
   /* char cmd[BUFSIZ]; */
@@ -198,7 +199,7 @@ void* log_memusage_execution_thread (void* ptr)
       {
         pthread_mutex_lock(&log_memusage_impl_data.mutex);
 
-        log_memusage_parse_smaps(/* verbose = */ 0);
+        ierr = log_memusage_parse_smaps(/* verbose = */ 0);
 
         fprintf(log_memusage_impl_data.fptr, "%g, %g, %g, %g\n",
                 elapsed,
@@ -208,6 +209,8 @@ void* log_memusage_execution_thread (void* ptr)
         pthread_mutex_unlock(&log_memusage_impl_data.mutex);
       }
       /* done mutex */
+
+      if (ierr) return NULL;
 
       nanosleep(&log_memusage_impl_data.sleep_time, NULL);
     }
