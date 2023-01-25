@@ -25,6 +25,18 @@ bin_PROGRAMS += demo_log_memusage
 demo_log_memusage_SOURCES = demo_log_memusage.c
 demo_log_memusage_LDADD = liblog_memusage.la
 
+# Support for pkgconfig
+pkgconfigdir     = $(libdir)/pkgconfig
+pkgconfig_DATA   = log_memusage.pc
+
+#----------------------------------------------------------
+# docs
+#----------------------------------------------------------
+man3_MANS = ./doc/peak_memusage.3 ./doc/log_memusage.3
+
+#----------------------------------------------------------
+# tests
+#----------------------------------------------------------
 check_PROGRAMS += use_memory
 use_memory_SOURCES = use_memory.c
 

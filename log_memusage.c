@@ -274,7 +274,7 @@ int log_memusage_resume ()
 __attribute__((constructor))
 void log_memusage_initialize ()
 {
-  printf("..(constructor)... %s, line: %d\n", __FILE__, __LINE__);
+  /* printf("..(constructor)... %s, line: %d\n", __FILE__, __LINE__); */
 
   char rank_env_vars[][64] = { "MPI_RANK",
                                "MP_CHILD",
@@ -339,7 +339,7 @@ void log_memusage_initialize ()
 __attribute__((destructor))
 void log_memusage_finalize ()
 {
-  printf("..(destructor)... %s, line: %d\n", __FILE__, __LINE__);
+  /* printf("..(destructor)... %s, line: %d\n", __FILE__, __LINE__); */
 
   log_memusage_pause();
 

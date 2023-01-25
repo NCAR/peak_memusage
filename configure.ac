@@ -61,6 +61,7 @@ AM_CONDITIONAL([MPI_BUILD], [test x"$enable_mpi" = xyes])
 AC_CONFIG_FILES([
  Makefile
  mpi/Makefile
+ log_memusage.pc
 ])
 AC_OUTPUT
 AC_MSG_RESULT([---------------------------------------------])

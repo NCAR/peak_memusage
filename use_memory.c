@@ -96,8 +96,8 @@ int main(int argc, char **argv) {
 		for (j=0; j<last; j++)
 			spare_data[j] = 24;
 		usleep(delay * 1000);
+                free(spare_data);
 	}
-        free(spare_data);
 
 #ifdef COMPILE_MPI
 	if(error = MPI_Finalize()) {
