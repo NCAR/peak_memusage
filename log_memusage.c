@@ -27,6 +27,8 @@ static struct log_memusage_data_str
   char hostname[NAME_MAX];
   pid_t pid;
 
+  char smapsname[PATH_MAX];
+
   char filename[PATH_MAX];
   FILE *fptr;
 
@@ -62,15 +64,18 @@ static struct log_memusage_data_str
 int log_memusage_parse_smaps(int verbose)
 {
   char line[BUFSIZ];
-  sprintf(line, "/proc/%d/smaps", log_memusage_impl_data.pid);
-  FILE *file = fopen(line, "r");
-  memset(&log_memusage_impl_data.sizes, 0, sizeof log_memusage_impl_data.sizes);
+  FILE *file = fopen(log_memusage_impl_data.smapsname, "r");
 
   if (!file) {
     perror(line);
 
     return -1;
   }
+
+  if (verbose > 1)
+    printf(" --> reading memory summary from %s\n", log_memusage_impl_data.smapsname);
+
+  memset(&log_memusage_impl_data.sizes, 0, sizeof log_memusage_impl_data.sizes);
 
   while (fgets(line, sizeof line, file))
     {
@@ -139,7 +144,7 @@ int log_memusage_annotate(const char* label)
 
 
 
-double log_memusage_get()
+int log_memusage_get()
 {
   struct rusage rus;
 
@@ -149,16 +154,16 @@ double log_memusage_get()
       return -1.;
     }
 
-  return rus.ru_maxrss/1024.;
+  return rus.ru_maxrss/1024;
 }
 
 
 
-double log_memusage_report(const char* prefix)
+int log_memusage_report(const char* prefix)
 {
-  const double maxrss_MB = log_memusage_get();
+  const int maxrss_MB = log_memusage_get();
 
-  fprintf(stderr, "%s%s / PID %d, peak used memory: %.2fMiB\n",
+  fprintf(stderr, "%s%s / PID %d, peak used memory: %d MiB\n",
           prefix,
           log_memusage_impl_data.hostname,
           log_memusage_impl_data.pid,
@@ -188,6 +193,8 @@ void* log_memusage_execution_thread (void* ptr)
   /*         pid, pid); */
   /* system(cmd); */
 
+  /* log_memusage_parse_smaps (/\* verbose = *\/ 2); */
+
   if (firstcall)
     {
       log_memusage_annotate("elapsed time (s), Referenced (MiB), RSS (MiB), PSS (MiB)");
@@ -206,11 +213,11 @@ void* log_memusage_execution_thread (void* ptr)
 
       ierr = log_memusage_parse_smaps(/* verbose = */ 0);
 
-      fprintf(log_memusage_impl_data.fptr, "%g, %g, %g, %g\n",
+      fprintf(log_memusage_impl_data.fptr, "%g, %d, %d, %d\n",
               elapsed,
-              log_memusage_impl_data.sizes.Referenced / 1024.,
-              log_memusage_impl_data.sizes.Rss / 1024.,
-              log_memusage_impl_data.sizes.Pss / 1024.);
+              log_memusage_impl_data.sizes.Referenced / 1024,
+              log_memusage_impl_data.sizes.Rss / 1024,
+              log_memusage_impl_data.sizes.Pss / 1024);
 
       pthread_mutex_unlock(&log_memusage_impl_data.mutex);
       /* done mutex */
@@ -265,7 +272,7 @@ int log_memusage_resume ()
  * ------------------------------------------------------------------
  */
 __attribute__((constructor))
-void initialize_log_memusage ()
+void log_memusage_initialize ()
 {
   printf("..(constructor)... %s, line: %d\n", __FILE__, __LINE__);
 
@@ -274,6 +281,7 @@ void initialize_log_memusage ()
                                "PMI_RANK",
                                "PMIX_RANK",
                                "OMPI_COMM_WORLD_RANK",
+                               "MV2_COMM_WORLD_RANK",
                                "SLURM_PROCID" };
 
   const int nrank_env_vars = sizeof rank_env_vars/64;
@@ -285,6 +293,17 @@ void initialize_log_memusage ()
   gethostname(log_memusage_impl_data.hostname, sizeof(log_memusage_impl_data.hostname) / sizeof(char));
   log_memusage_impl_data.pid = getpid();
   log_memusage_impl_data.rank = LOG_MEMUSAGE_INVALID_RANK;
+
+  /* where do we get our usage data? /proc/<PID>/smaps_rollup is preferred, fall back to /proc/<PID>/smaps */
+  sprintf(log_memusage_impl_data.smapsname, "/proc/%d/smaps_rollup", log_memusage_impl_data.pid);
+
+  if (access(log_memusage_impl_data.smapsname, R_OK) != 0)
+    {
+      sprintf(log_memusage_impl_data.smapsname, "/proc/%d/smaps", log_memusage_impl_data.pid);
+
+      if (access(log_memusage_impl_data.smapsname, R_OK) != 0)
+        fprintf(stderr, "Cannot locate /proc/%d/smap_rollup or /proc/%d/smaps file!!\n", log_memusage_impl_data.pid, log_memusage_impl_data.pid);
+    }
 
   /* try some common env vars to learn rank: */
   for (v=0; v<nrank_env_vars; ++v)
@@ -318,7 +337,7 @@ void initialize_log_memusage ()
 
 
 __attribute__((destructor))
-void finalize_log_memusage ()
+void log_memusage_finalize ()
 {
   printf("..(destructor)... %s, line: %d\n", __FILE__, __LINE__);
 

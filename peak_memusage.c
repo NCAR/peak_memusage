@@ -85,7 +85,7 @@ int main(int argc, char **argv) {
 			fprintf(stderr, "Problems getting resource usage for RUSAGE_SELF\n");
 		}
 		else {
-			fprintf(stderr, "%12.3f %12d %12d %12d %12d %12d %12d %12d %12s (RUSAGE_SELF)\n",
+			fprintf(stderr, "%12.3f %12ld %12ld %12ld %12ld %12d %12d %12d %12s (RUSAGE_SELF)\n",
 				difftime(stop_time, start_time),
 				us.ru_maxrss, us.ru_ixrss, us.ru_idrss, us.ru_isrss,
 				rank, exit_status, signal, runme);
@@ -95,7 +95,7 @@ int main(int argc, char **argv) {
 			fprintf(stderr, "Problems getting resource usage for RUSAGE_CHILDREN\n\n");
 		}
 		else {
-			fprintf(stderr, "%12.3f %12d %12d %12d %12d %12d %12d %12d %12s (RUSAGE_CHILDREN)\n\n",
+			fprintf(stderr, "%12.3f %12ld %12ld %12ld %12ld %12d %12d %12d %12s (RUSAGE_CHILDREN)\n\n",
 				difftime(stop_time, start_time),
 				us.ru_maxrss, us.ru_ixrss, us.ru_idrss, us.ru_isrss,
 				rank, exit_status, signal, runme);
