@@ -170,6 +170,7 @@ double log_memusage_report(const char* prefix)
 
 void* log_memusage_execution_thread (void* ptr)
 {
+  static bool firstcall = true;
   struct timeval current_time;
   int ierr = 0;
   double elapsed=0., elapsed_us=0.;
@@ -186,7 +187,11 @@ void* log_memusage_execution_thread (void* ptr)
   /*         pid, pid); */
   /* system(cmd); */
 
-  log_memusage_annotate("elapsed time (s), Referenced (MiB), RSS (MiB), PSS (MiB)");
+  if (firstcall)
+    {
+      log_memusage_annotate("elapsed time (s), Referenced (MiB), RSS (MiB), PSS (MiB)");
+      firstcall = false;
+    }
 
   while (true)
     {
@@ -216,6 +221,36 @@ void* log_memusage_execution_thread (void* ptr)
     }
 
   return NULL;
+}
+
+
+
+int log_memusage_pause ()
+{
+  /* acquire a mutex lock to acquire log_memusage_impl_data.fptr  (make sure not in use) */
+  pthread_mutex_lock(&log_memusage_impl_data.mutex);
+
+  pthread_cancel(log_memusage_impl_data.thread);
+  pthread_join(log_memusage_impl_data.thread, NULL);
+
+  pthread_mutex_unlock(&log_memusage_impl_data.mutex);
+
+  return 0;
+}
+
+
+
+int log_memusage_resume ()
+{
+  /*
+   * make sure logging thread is cancelled...
+   */
+  log_memusage_pause ();
+
+  log_memusage_impl_data.retval =
+    pthread_create (&log_memusage_impl_data.thread, NULL, log_memusage_execution_thread, NULL);
+
+  return 0;
 }
 
 
@@ -268,8 +303,9 @@ void initialize_log_memusage ()
 
   pthread_mutex_init(&log_memusage_impl_data.mutex, NULL);
 
-  log_memusage_impl_data.retval =
-    pthread_create (&log_memusage_impl_data.thread, NULL, log_memusage_execution_thread, NULL);
+  /* log_memusage_impl_data.retval = */
+  /*   pthread_create (&log_memusage_impl_data.thread, NULL, log_memusage_execution_thread, NULL); */
+  log_memusage_resume();
 }
 
 
@@ -279,8 +315,10 @@ void finalize_log_memusage ()
 {
   printf("..(destructor)... %s, line: %d\n", __FILE__, __LINE__);
 
-  pthread_cancel(log_memusage_impl_data.thread);
-  pthread_join(log_memusage_impl_data.thread, NULL);
+  /* pthread_cancel(log_memusage_impl_data.thread); */
+  /* pthread_join(log_memusage_impl_data.thread, NULL); */
+
+  log_memusage_pause();
 
   fclose(log_memusage_impl_data.fptr);
 
