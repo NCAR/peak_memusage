@@ -11,22 +11,19 @@ $ gcc -o my_app my_app.c -llog_memusage
 $ ./my_app
 .fi
 
-$ mpiexec log_memusage <mpi_program>
+$ mpiexec -x LD_PRELOAD=/path/to/liblog_memusage.so <mpi_program>
 
 .SH DESCRIPTION
-log_memusage is high level shell program for adding users to LDAP server.  On Debian, administrators should usually use log_memusage.debian(8) instead.
-
-.SH OPTIONS
-The log_memusage does not take any options.
+log_memusage is a library that monitors and reports application memory usage.
 
 .SH ENVIRONMENT
 .SS General Environment Variables
 .PP
 \fBLOG_MEMUSAGE\fR
 .RS 4
-If enabled, logs memory usage vs. time to the output file "memory_usage.log".
+If enabled (1), logs memory usage vs. time to the output file "memory_usage.log".
 .sp
-Default: Enabled\&.
+Default: 0\&
 .RE
 .PP
 \fBLOG_MEMUSAGE_POLL_INTERVAL\fR

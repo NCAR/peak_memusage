@@ -163,10 +163,16 @@ int log_memusage_report(const char* prefix)
 {
   const int maxrss_MB = log_memusage_get();
 
-  fprintf(stderr, "%s%s / PID %d, peak used memory: %d MiB\n",
+  fprintf(stderr, "%s%s / PID %d",
           prefix,
           log_memusage_impl_data.hostname,
-          log_memusage_impl_data.pid,
+          log_memusage_impl_data.pid);
+
+  if (log_memusage_impl_data.rank != LOG_MEMUSAGE_INVALID_RANK)
+    fprintf(stderr, " / MPI Rank %d",
+            log_memusage_impl_data.rank);
+
+  fprintf(stderr, ", peak used memory: %d MiB\n",
           maxrss_MB);
 
   return maxrss_MB;
