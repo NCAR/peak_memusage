@@ -51,6 +51,7 @@ static struct log_memusage_data_str
   int rank;
   pthread_t thread;
   pthread_mutex_t mutex;
+  bool running;
 
 } log_memusage_impl_data;
 
@@ -201,18 +202,17 @@ void* log_memusage_execution_thread (void* ptr)
       elapsed = elapsed_us / 1000000.;
 
       /* acquire a mutex lock to protect log_memusage_impl_data.fptr, log_memusage_impl_data.sizes */
-      {
-        pthread_mutex_lock(&log_memusage_impl_data.mutex);
+      pthread_mutex_lock(&log_memusage_impl_data.mutex);
 
-        ierr = log_memusage_parse_smaps(/* verbose = */ 0);
+      ierr = log_memusage_parse_smaps(/* verbose = */ 0);
 
-        fprintf(log_memusage_impl_data.fptr, "%g, %g, %g, %g\n",
-                elapsed,
-                log_memusage_impl_data.sizes.Referenced / 1024.,
-                log_memusage_impl_data.sizes.Rss / 1024.,
-                log_memusage_impl_data.sizes.Pss / 1024.);
-        pthread_mutex_unlock(&log_memusage_impl_data.mutex);
-      }
+      fprintf(log_memusage_impl_data.fptr, "%g, %g, %g, %g\n",
+              elapsed,
+              log_memusage_impl_data.sizes.Referenced / 1024.,
+              log_memusage_impl_data.sizes.Rss / 1024.,
+              log_memusage_impl_data.sizes.Pss / 1024.);
+
+      pthread_mutex_unlock(&log_memusage_impl_data.mutex);
       /* done mutex */
 
       if (ierr) return NULL;
@@ -230,8 +230,12 @@ int log_memusage_pause ()
   /* acquire a mutex lock to acquire log_memusage_impl_data.fptr  (make sure not in use) */
   pthread_mutex_lock(&log_memusage_impl_data.mutex);
 
-  pthread_cancel(log_memusage_impl_data.thread);
-  pthread_join(log_memusage_impl_data.thread, NULL);
+  if (log_memusage_impl_data.running)
+    {
+      pthread_cancel(log_memusage_impl_data.thread);
+      pthread_join(log_memusage_impl_data.thread, NULL);
+      log_memusage_impl_data.running = false;
+    }
 
   pthread_mutex_unlock(&log_memusage_impl_data.mutex);
 
@@ -246,6 +250,8 @@ int log_memusage_resume ()
    * make sure logging thread is cancelled...
    */
   log_memusage_pause ();
+
+  log_memusage_impl_data.running = true;
 
   log_memusage_impl_data.retval =
     pthread_create (&log_memusage_impl_data.thread, NULL, log_memusage_execution_thread, NULL);
@@ -299,12 +305,13 @@ void initialize_log_memusage ()
 
   log_memusage_impl_data.fptr = NULL;
 
+
   gettimeofday(&log_memusage_impl_data.start_time, NULL);
 
   pthread_mutex_init(&log_memusage_impl_data.mutex, NULL);
 
-  /* log_memusage_impl_data.retval = */
-  /*   pthread_create (&log_memusage_impl_data.thread, NULL, log_memusage_execution_thread, NULL); */
+  log_memusage_impl_data.running = false;
+
   log_memusage_resume();
 }
 
@@ -314,9 +321,6 @@ __attribute__((destructor))
 void finalize_log_memusage ()
 {
   printf("..(destructor)... %s, line: %d\n", __FILE__, __LINE__);
-
-  /* pthread_cancel(log_memusage_impl_data.thread); */
-  /* pthread_join(log_memusage_impl_data.thread, NULL); */
 
   log_memusage_pause();
 
