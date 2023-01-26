@@ -16,6 +16,23 @@ extern "C" {
   void log_memusage_initialize ();
   void log_memusage_finalize ();
 
+#ifndef LOG_MEMUSAGE_MAX_GPU_DEVICES
+#  define LOG_MEMUSAGE_MAX_GPU_DEVICES 8
+#endif
+
+  struct log_memusage_gpu_memory
+  {
+    unsigned int device_count;
+    int used[LOG_MEMUSAGE_MAX_GPU_DEVICES];
+    int free[LOG_MEMUSAGE_MAX_GPU_DEVICES];
+  };
+
+  typedef struct log_memusage_gpu_memory log_memusage_gpu_memory_t;
+
+  log_memusage_gpu_memory_t log_memusage_get_each_gpu ();
+  int log_memusage_get_all_gpus ();
+  int log_memusage_get_max_gpu ();
+
 #ifdef __cplusplus
 }
 #endif

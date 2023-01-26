@@ -3,6 +3,8 @@
 #endif
 #include <stdio.h>
 #include <stdbool.h>
+#include <assert.h>
+
 #include "log_memusage.h"
 #include "log_memusage_impl.h"
 
@@ -10,7 +12,6 @@
 #include <nvml.h>
 
 
-#define MAX_GPU_DEVICES 8
 
 /*
  * Structure to "hide" implementation details,
@@ -20,11 +21,7 @@ static struct log_memusage_nvml_data_str
 {
   bool nvml_initialized;
   unsigned int device_count;
-  nvmlDevice_t device[MAX_GPU_DEVICES];
-
-  unsigned long total_mem[MAX_GPU_DEVICES], total_mem_all;
-  unsigned long used_mem[MAX_GPU_DEVICES],  used_mem_all;
-  unsigned long free_mem[MAX_GPU_DEVICES],  free_mem_all;
+  nvmlDevice_t device[LOG_MEMUSAGE_MAX_GPU_DEVICES];
 
 } log_memusage_impl_nvml_data;
 
@@ -33,7 +30,7 @@ static struct log_memusage_nvml_data_str
 __attribute__ ((constructor))
 int log_memusage_initialize_nvml ()
 {
-  const int verbose      = (getenv("LOG_MEMUSAGE_VERBOSE")          != NULL) ? atoi(getenv("LOG_MEMUSAGE_VERBOSE")) : 0;
+  const int verbose = (getenv("LOG_MEMUSAGE_VERBOSE") != NULL) ? atoi(getenv("LOG_MEMUSAGE_VERBOSE")) : 0;
 
   int i =0;
   nvmlReturn_t result;
@@ -44,7 +41,9 @@ int log_memusage_initialize_nvml ()
   result = nvmlInit();
   if (NVML_SUCCESS != result)
     {
-      fprintf(stderr, "Failed to initialize NVML: %s\n", nvmlErrorString(result));
+      /* skip this common known issue, when compiled with NVML but running elsewhere */
+      if (NVML_ERROR_DRIVER_NOT_LOADED != result)
+        fprintf(stderr, "Failed to initialize NVML: %s\n", nvmlErrorString(result));
       return 1;
     }
 
@@ -94,10 +93,89 @@ int log_memusage_initialize_nvml ()
                            meminfo.free  / 1024 / 1024,
                            meminfo.total / 1024 / 1024);
         }
-      printf("sizeof( log_memusage_impl_nvml_data) = %d\n",  sizeof log_memusage_impl_nvml_data);
+      printf("sizeof( log_memusage_impl_nvml_data) = %lu\n",  sizeof log_memusage_impl_nvml_data);
     }
 
+  const log_memusage_gpu_memory_t gpu_memory = log_memusage_get_each_gpu();
+
   return 0;
+}
+
+
+
+log_memusage_gpu_memory_t log_memusage_get_each_gpu ()
+{
+  int i=0;
+  nvmlReturn_t result;
+  log_memusage_gpu_memory_t gpu_memory;
+
+  gpu_memory.device_count = log_memusage_impl_nvml_data.device_count;
+
+  for (i=0; i<LOG_MEMUSAGE_MAX_GPU_DEVICES; i++)
+    gpu_memory.used[i] = gpu_memory.free[i] = 0;
+
+  if ( ! log_memusage_impl_nvml_data.nvml_initialized )
+    return gpu_memory;
+
+  for (i = 0; i < log_memusage_impl_nvml_data.device_count; i++)
+    {
+      nvmlMemory_t meminfo;
+
+      result = nvmlDeviceGetMemoryInfo (log_memusage_impl_nvml_data.device[i], &meminfo);
+      if (NVML_SUCCESS != result)
+        {
+          fprintf(stderr, "\nFailed to get memory info for device %u: %s\n", i, nvmlErrorString(result));
+          return gpu_memory;
+        }
+
+      gpu_memory.used[i]  = meminfo.used  / 1024 / 1024;
+      gpu_memory.free[i]  = meminfo.free  / 1024 / 1024;
+    }
+
+  return gpu_memory;
+}
+
+
+
+int log_memusage_get_all_gpus ()
+{
+  const log_memusage_gpu_memory_t gpu_memory = log_memusage_get_each_gpu();
+
+  int used_all_MB=0;
+  int i=0;
+  nvmlReturn_t result;
+
+  if ( ! log_memusage_impl_nvml_data.nvml_initialized )
+    return 0;
+
+  for (i = 0; i < gpu_memory.device_count; i++)
+    used_all_MB += gpu_memory.used[i];
+
+  return used_all_MB;
+}
+
+
+
+
+int log_memusage_get_max_gpu ()
+{
+  const log_memusage_gpu_memory_t gpu_memory = log_memusage_get_each_gpu();
+
+  int used_max_MB=0;
+  int i=0;
+  nvmlReturn_t result;
+
+  if ( ! log_memusage_impl_nvml_data.nvml_initialized )
+    return 0;
+
+  for (i = 0; i < log_memusage_impl_nvml_data.device_count; i++)
+    {
+      int used_this_MB = gpu_memory.used[i];
+
+      used_max_MB = (used_this_MB > used_max_MB) ? used_this_MB : used_max_MB;
+    }
+
+  return used_max_MB;
 }
 
 

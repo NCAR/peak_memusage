@@ -150,18 +150,15 @@ int log_memusage_parse_smaps(int verbose)
 
 int log_memusage_annotate(const char* label)
 {
-  const int verbose      = (getenv("LOG_MEMUSAGE_VERBOSE")          != NULL) ? atoi(getenv("LOG_MEMUSAGE_VERBOSE")) : 0;
-
   int nchar = -1;
 
   /* acquire a mutex lock to protect log_memusage_impl_data.fptr, log_memusage_impl_data.sizes */
   pthread_mutex_lock(&log_memusage_impl_data.mutex);
   if (NULL == log_memusage_impl_data.fptr)
     {
-      if (verbose)
-        log_memusage_msg(stderr, "# (memusage) --> logging memory usage for process %d to %s ...\n",
-                log_memusage_impl_data.pid,
-                log_memusage_impl_data.filename);
+      log_memusage_msg(stderr, "# (memusage) --> logging memory usage for process %d to %s ...\n",
+                       log_memusage_impl_data.pid,
+                       log_memusage_impl_data.filename);
 
       log_memusage_impl_data.fptr = fopen(log_memusage_impl_data.filename, "w");
     }
@@ -193,16 +190,16 @@ int log_memusage_report(const char* prefix)
 {
   const int maxrss_MB = log_memusage_get();
 
-  log_memusage_msg(stderr, "%s%s / PID %d",
+  fprintf(stderr, "%s%s / PID %d",
           prefix,
           log_memusage_impl_data.hostname,
           log_memusage_impl_data.pid);
 
   if (log_memusage_impl_data.rank != LOG_MEMUSAGE_INVALID_RANK)
-    log_memusage_msg(stderr, " / MPI Rank %d",
+    fprintf(stderr, " / MPI Rank %d",
             log_memusage_impl_data.rank);
 
-  log_memusage_msg(stderr, ", peak used memory: %d MiB\n",
+  fprintf(stderr, ", peak used memory: %d MiB\n",
           maxrss_MB);
 
   return maxrss_MB;
@@ -218,11 +215,9 @@ void* log_memusage_execution_thread (void* ptr)
 
   double elapsed=0., elapsed_us=0.;
 
-  const int verbose      = (getenv("LOG_MEMUSAGE_VERBOSE")          != NULL) ? atoi(getenv("LOG_MEMUSAGE_VERBOSE")) : 0;
   const int mem_tripwire = (getenv("LOG_MEMUSAGE_CPU_MEM_TRIPWIRE") != NULL) ? atoi(getenv("LOG_MEMUSAGE_CPU_MEM_TRIPWIRE")) : INT_MAX;
 
-
-  if (verbose) printf("# (memusage) --> Using %d MB as LOG_MEMUSAGE_CPU_MEM_TRIPWIRE\n", mem_tripwire);
+  log_memusage_msg(stderr, "Using %d MB as LOG_MEMUSAGE_CPU_MEM_TRIPWIRE\n", mem_tripwire);
 
   /* char cmd[BUFSIZ]; */
 
@@ -346,7 +341,6 @@ void log_memusage_initialize ()
   /* printf("..(constructor)... %s, line: %d\n", __FILE__, __LINE__); */
 
   int v = 0;
-  int verbose = false;
   char str[NAME_MAX];
   char rank_env_vars[][64] = { "MPI_RANK",
                                "MP_CHILD",
@@ -369,8 +363,6 @@ void log_memusage_initialize ()
   setenv("LOG_MEMUSAGE_OUTPUT_INTERVAL",     "1", /* overwrite = */ 0);
   sprintf(str, "%d", INT_MAX);
   setenv("LOG_MEMUSAGE_CPU_MEM_TRIPWIRE",  str,   /* overwrite = */ 0);
-
-  verbose = atoi(getenv("LOG_MEMUSAGE_VERBOSE"));
 
   /* call this function from the main thread to register the parent thread ID inside for later use. */
   log_memusage_get_parent_thread_ID();
@@ -413,7 +405,7 @@ void log_memusage_initialize ()
 
   /* set up the polling interval, for nanosleep, using input floating point value. */
   polling_interval_sec = atof(getenv("LOG_MEMUSAGE_POLL_INTERVAL"));
-  if (verbose) printf("# (memusage) --> Using %g as LOG_MEMUSAGE_POLL_INTERVAL\n", polling_interval_sec);
+  log_memusage_msg(stderr, "Using %g as LOG_MEMUSAGE_POLL_INTERVAL\n", polling_interval_sec);
   log_memusage_impl_data.sleep_time.tv_sec = 0;
   while (polling_interval_sec >= 1.)
     {
@@ -446,7 +438,7 @@ void log_memusage_finalize ()
 
   fclose(log_memusage_impl_data.fptr);
 
-  log_memusage_report(/* prefix = */ "# (memusage) --> ");
+  log_memusage_report(/* prefix = */ LOG_MEMUSAGE_LOGGING_PREFIX);
 
   pthread_mutex_destroy(&log_memusage_impl_data.mutex);
 }
