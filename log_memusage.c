@@ -60,6 +60,31 @@ static struct log_memusage_data_str
 } log_memusage_impl_data;
 
 
+
+int log_memusage_msg(FILE* f, const char* format, ...)
+{
+  static bool firstcall = true;
+  static int verbose = 0;
+  va_list args;
+  int rval;
+  if (firstcall)
+    {
+      verbose = (getenv("LOG_MEMUSAGE_VERBOSE") != NULL) ? atoi(getenv("LOG_MEMUSAGE_VERBOSE")) : 0;
+      firstcall = false;
+    }
+  if (!verbose)
+    return 0;
+
+  va_start (args, format);
+  fprintf(f, LOG_MEMUSAGE_LOGGING_PREFIX);
+  rval = vfprintf (f, format, args);
+  va_end (args);
+
+  return rval;
+}
+
+
+
 /*
  * https://gist.github.com/avar/896026/c346c7c8e4a9ab18577b4e6abfca37e358de83c1
  */
@@ -134,7 +159,7 @@ int log_memusage_annotate(const char* label)
   if (NULL == log_memusage_impl_data.fptr)
     {
       if (verbose)
-        fprintf(stderr, "# (memusage) --> logging memory usage for process %d to %s ...\n",
+        log_memusage_msg(stderr, "# (memusage) --> logging memory usage for process %d to %s ...\n",
                 log_memusage_impl_data.pid,
                 log_memusage_impl_data.filename);
 
@@ -155,7 +180,7 @@ int log_memusage_get()
 
   if (getrusage(RUSAGE_SELF, &rus))
     {
-      fprintf(stderr, "Problem getting resource usage\n");
+      log_memusage_msg(stderr, "Problem getting resource usage\n");
       return -1.;
     }
 
@@ -168,16 +193,16 @@ int log_memusage_report(const char* prefix)
 {
   const int maxrss_MB = log_memusage_get();
 
-  fprintf(stderr, "%s%s / PID %d",
+  log_memusage_msg(stderr, "%s%s / PID %d",
           prefix,
           log_memusage_impl_data.hostname,
           log_memusage_impl_data.pid);
 
   if (log_memusage_impl_data.rank != LOG_MEMUSAGE_INVALID_RANK)
-    fprintf(stderr, " / MPI Rank %d",
+    log_memusage_msg(stderr, " / MPI Rank %d",
             log_memusage_impl_data.rank);
 
-  fprintf(stderr, ", peak used memory: %d MiB\n",
+  log_memusage_msg(stderr, ", peak used memory: %d MiB\n",
           maxrss_MB);
 
   return maxrss_MB;
@@ -225,7 +250,7 @@ void* log_memusage_execution_thread (void* ptr)
 
       if (curr_rssMB > mem_tripwire)
         {
-          fprintf(stderr, "killing Process %d for exceeding CPU memory limit: %d > %d\n",
+          log_memusage_msg(stderr, "killing Process %d for exceeding CPU memory limit: %d > %d\n",
                   log_memusage_impl_data.pid,
                   curr_rssMB, mem_tripwire);
           pthread_kill(log_memusage_get_parent_thread_ID(), SIGUSR2);
@@ -369,7 +394,7 @@ void log_memusage_initialize ()
       sprintf(log_memusage_impl_data.smapsname, "/proc/%d/smaps", log_memusage_impl_data.pid);
 
       if (access(log_memusage_impl_data.smapsname, R_OK) != 0)
-        fprintf(stderr, "Cannot locate /proc/%d/smap_rollup or /proc/%d/smaps file!!\n", log_memusage_impl_data.pid, log_memusage_impl_data.pid);
+        log_memusage_msg(stderr, "Cannot locate /proc/%d/smap_rollup or /proc/%d/smaps file!!\n", log_memusage_impl_data.pid, log_memusage_impl_data.pid);
     }
 
   /* try some common env vars to learn rank: */

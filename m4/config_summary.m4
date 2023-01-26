@@ -41,10 +41,12 @@ echo '      PTHREAD_CC.............. :' ${PTHREAD_CC}
 echo '      PTHREAD_CFLAGS.......... :' ${PTHREAD_CFLAGS}
 echo '      PTHREAD_LIBS............ :' ${PTHREAD_LIBS}
 echo Optional Dependencies:
+echo '   NVML....................... :' ${enable_nvml}
 echo '   OpenMP..................... :' ${enable_openmp}
 echo '   MPI (test suite only)...... :' ${enable_mpi}
 if test "x${enable_mpi}" = "xyes"; then
   echo '      MPICC................... :' ${MPICC}
+  echo '      MPICXX.................. :' ${MPICXX}
   echo '      MPIEXEC................. :' ${MPIEXEC}
 fi
 echo '-------------------------------------------------------------------------------'

@@ -1,4 +1,5 @@
 CC = $(MPICC)
+CXX = $(MPICXX)
 
 TESTS =
 check_PROGRAMS =

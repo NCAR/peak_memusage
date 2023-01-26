@@ -15,7 +15,9 @@ bin_PROGRAMS += peak_memusage
 peak_memusage_SOURCES = peak_memusage.c
 
 lib_LTLIBRARIES += liblog_memusage.la
-liblog_memusage_la_SOURCES = log_memusage.c log_memusage.h log_memusage_impl.h log_memusage_tripwire.c
+liblog_memusage_la_SOURCES = log_memusage.c log_memusage.h \
+                             log_memusage_impl.h log_memusage_tripwire.c \
+	                     log_memusage_nvml.c
 liblog_memusage_la_CFLAGS = $(PTHREAD_CFLAGS)
 liblog_memusage_la_LIBADD = $(PTHREAD_LIBS)
 
