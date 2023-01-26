@@ -211,6 +211,7 @@ void* log_memusage_execution_thread (void* ptr)
 {
   static bool firstcall = true;
   struct timeval current_time;
+  log_memusage_gpu_memory_t gpu_memory;
   int ierr = 0, curr_rssMB=0,last_rssMB=0;
 
   double elapsed=0., elapsed_us=0.;
@@ -219,22 +220,11 @@ void* log_memusage_execution_thread (void* ptr)
 
   log_memusage_msg(stderr, "Using %d MB as LOG_MEMUSAGE_CPU_MEM_TRIPWIRE\n", mem_tripwire);
 
-  /* char cmd[BUFSIZ]; */
-
-  /* sprintf(cmd, "ls /proc/%d/ ; cat /proc/%d/smaps && echo", */
-  /*         pid, pid); */
-  /* system(cmd); */
-
-  /* log_memusage_parse_smaps(/\* verbose = *\/ 2); */
-
-  /* sprintf(cmd, "echo && echo -n 'Pss: ' && awk '/Pss:/{ sum += $2 } END { print sum }' /proc/%d/smaps && echo -n 'Rss: ' && awk '/Rss:/{ sum += $2 } END { print sum }' /proc/%d/smaps && echo", */
-  /*         pid, pid); */
-  /* system(cmd); */
-
   /* log_memusage_parse_smaps (/\* verbose = *\/ 2); */
 
   if (firstcall)
     {
+      const int ngpus = log_memusage_ngpus();
       log_memusage_annotate("elapsed time (s), Referenced (MiB), RSS (MiB), PSS (MiB)");
       firstcall = false;
     }

@@ -8,7 +8,25 @@
 #include "log_memusage.h"
 #include "log_memusage_impl.h"
 
-#ifdef ENABLE_NVML
+#ifndef ENABLE_NVML
+
+/*
+ * Sane defaults when NVML is not available (assume no GPUs).
+ */
+int log_memusage_ngpus () { return 0; }
+
+log_memusage_gpu_memory_t log_memusage_get_each_gpu ()
+{
+  log_memusage_gpu_memory_t gpu_memory;
+  memset(&gpu_memory, 0, sizeof gpu_memory);
+  return gpu_memory;
+}
+
+int log_memusage_get_all_gpus () { return 0; }
+int log_memusage_get_max_gpu () { return 0; }
+
+
+#else
 #include <nvml.h>
 
 
@@ -24,6 +42,17 @@ static struct log_memusage_nvml_data_str
   nvmlDevice_t device[LOG_MEMUSAGE_MAX_GPU_DEVICES];
 
 } log_memusage_impl_nvml_data;
+
+
+
+int log_memusage_ngpus ()
+{
+  if ( ! log_memusage_impl_nvml_data.nvml_initialized )
+    return 0;
+
+  return log_memusage_impl_nvml_data.device_count;
+}
+
 
 
 
@@ -108,14 +137,12 @@ log_memusage_gpu_memory_t log_memusage_get_each_gpu ()
   int i=0;
   nvmlReturn_t result;
   log_memusage_gpu_memory_t gpu_memory;
-
-  gpu_memory.device_count = log_memusage_impl_nvml_data.device_count;
-
-  for (i=0; i<LOG_MEMUSAGE_MAX_GPU_DEVICES; i++)
-    gpu_memory.used[i] = gpu_memory.free[i] = 0;
+  memset(&gpu_memory, 0, sizeof gpu_memory);
 
   if ( ! log_memusage_impl_nvml_data.nvml_initialized )
     return gpu_memory;
+
+  gpu_memory.device_count = log_memusage_impl_nvml_data.device_count;
 
   for (i = 0; i < log_memusage_impl_nvml_data.device_count; i++)
     {

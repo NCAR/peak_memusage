@@ -29,6 +29,7 @@ extern "C" {
 
   typedef struct log_memusage_gpu_memory log_memusage_gpu_memory_t;
 
+  int log_memusage_ngpus ();
   log_memusage_gpu_memory_t log_memusage_get_each_gpu ();
   int log_memusage_get_all_gpus ();
   int log_memusage_get_max_gpu ();
