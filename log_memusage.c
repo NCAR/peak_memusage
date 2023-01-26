@@ -13,10 +13,12 @@
 #include <limits.h> /* PATH_MAX */
 #include <pthread.h>
 #include <stdbool.h>
+#include <signal.h>
+#include <assert.h>
 
 #include "log_memusage.h"
+#include "log_memusage_impl.h"
 
-#define LOG_MEMUSAGE_INVALID_RANK -1
 
 /*
  * Structure to "hide" implementation details,
@@ -123,15 +125,18 @@ int log_memusage_parse_smaps(int verbose)
 
 int log_memusage_annotate(const char* label)
 {
+  const int verbose      = (getenv("LOG_MEMUSAGE_VERBOSE")          != NULL) ? atoi(getenv("LOG_MEMUSAGE_VERBOSE")) : 0;
+
   int nchar = -1;
 
   /* acquire a mutex lock to protect log_memusage_impl_data.fptr, log_memusage_impl_data.sizes */
   pthread_mutex_lock(&log_memusage_impl_data.mutex);
   if (NULL == log_memusage_impl_data.fptr)
     {
-      fprintf(stderr, "logging memory usage for process %d to %s ...\n",
-              log_memusage_impl_data.pid,
-              log_memusage_impl_data.filename);
+      if (verbose)
+        fprintf(stderr, "# (memusage) --> logging memory usage for process %d to %s ...\n",
+                log_memusage_impl_data.pid,
+                log_memusage_impl_data.filename);
 
       log_memusage_impl_data.fptr = fopen(log_memusage_impl_data.filename, "w");
     }
@@ -184,8 +189,15 @@ void* log_memusage_execution_thread (void* ptr)
 {
   static bool firstcall = true;
   struct timeval current_time;
-  int ierr = 0;
+  int ierr = 0, curr_rssMB=0,last_rssMB=0;
+
   double elapsed=0., elapsed_us=0.;
+
+  const int verbose      = (getenv("LOG_MEMUSAGE_VERBOSE")          != NULL) ? atoi(getenv("LOG_MEMUSAGE_VERBOSE")) : 0;
+  const int mem_tripwire = (getenv("LOG_MEMUSAGE_CPU_MEM_TRIPWIRE") != NULL) ? atoi(getenv("LOG_MEMUSAGE_CPU_MEM_TRIPWIRE")) : INT_MAX;
+
+
+  if (verbose) printf("# (memusage) --> Using %d MB as LOG_MEMUSAGE_CPU_MEM_TRIPWIRE\n", mem_tripwire);
 
   /* char cmd[BUFSIZ]; */
 
@@ -209,6 +221,17 @@ void* log_memusage_execution_thread (void* ptr)
 
   while (true)
     {
+      curr_rssMB = log_memusage_get();
+
+      if (curr_rssMB > mem_tripwire)
+        {
+          fprintf(stderr, "killing Process %d for exceeding CPU memory limit: %d > %d\n",
+                  log_memusage_impl_data.pid,
+                  curr_rssMB, mem_tripwire);
+          pthread_kill(log_memusage_get_parent_thread_ID(), SIGUSR2);
+          return NULL;
+        }
+
       gettimeofday(&current_time, NULL);
 
       elapsed_us = (current_time.tv_sec - log_memusage_impl_data.start_time.tv_sec) * 1000000 + current_time.tv_usec - log_memusage_impl_data.start_time.tv_usec;
@@ -274,6 +297,21 @@ int log_memusage_resume ()
 
 
 
+pthread_t log_memusage_get_parent_thread_ID()
+{
+  static pthread_t parent_thread_ID;
+  static bool firstcall = true;
+  if (firstcall)
+    {
+      parent_thread_ID = pthread_self();
+      firstcall = false;
+    }
+
+  return parent_thread_ID;
+}
+
+
+
 /*
  * ------------------------------------------------------------------
  */
@@ -282,6 +320,9 @@ void log_memusage_initialize ()
 {
   /* printf("..(constructor)... %s, line: %d\n", __FILE__, __LINE__); */
 
+  int v = 0;
+  int verbose = false;
+  char str[NAME_MAX];
   char rank_env_vars[][64] = { "MPI_RANK",
                                "MP_CHILD",
                                "PMI_RANK",
@@ -291,7 +332,26 @@ void log_memusage_initialize ()
                                "SLURM_PROCID" };
 
   const int nrank_env_vars = sizeof rank_env_vars/64;
-  int v=0;
+
+  double polling_interval_sec = 0.;
+
+  /*
+   * Initialize environment variables (conditionally, if not set already.
+   */
+  setenv("LOG_MEMUSAGE_VERBOSE",             "0", /* overwrite = */ 0);
+  setenv("LOG_MEMUSAGE_LOGFILE",             "0", /* overwrite = */ 0);
+  setenv("LOG_MEMUSAGE_POLL_INTERVAL",     "0.1", /* overwrite = */ 0);
+  setenv("LOG_MEMUSAGE_OUTPUT_INTERVAL",     "1", /* overwrite = */ 0);
+  sprintf(str, "%d", INT_MAX);
+  setenv("LOG_MEMUSAGE_CPU_MEM_TRIPWIRE",  str,   /* overwrite = */ 0);
+
+  verbose = atoi(getenv("LOG_MEMUSAGE_VERBOSE"));
+
+  /* call this function from the main thread to register the parent thread ID inside for later use. */
+  log_memusage_get_parent_thread_ID();
+
+  log_memusage_register_signal_handler();
+
 
   /*
    * Initialize Data Structures.
@@ -300,11 +360,12 @@ void log_memusage_initialize ()
   log_memusage_impl_data.pid = getpid();
   log_memusage_impl_data.rank = LOG_MEMUSAGE_INVALID_RANK;
 
-  /* where do we get our usage data? /proc/<PID>/smaps_rollup is preferred, fall back to /proc/<PID>/smaps */
+  /* where do we get our usage data?*/
+  /* /proc/<PID>/smaps_rollup is preferred... */
   sprintf(log_memusage_impl_data.smapsname, "/proc/%d/smaps_rollup", log_memusage_impl_data.pid);
-
   if (access(log_memusage_impl_data.smapsname, R_OK) != 0)
     {
+      /* fall back to /proc/<PID>/smaps */
       sprintf(log_memusage_impl_data.smapsname, "/proc/%d/smaps", log_memusage_impl_data.pid);
 
       if (access(log_memusage_impl_data.smapsname, R_OK) != 0)
@@ -325,8 +386,17 @@ void log_memusage_initialize ()
   else
     sprintf(log_memusage_impl_data.filename, "memory_usage.log");
 
+  /* set up the polling interval, for nanosleep, using input floating point value. */
+  polling_interval_sec = atof(getenv("LOG_MEMUSAGE_POLL_INTERVAL"));
+  if (verbose) printf("# (memusage) --> Using %g as LOG_MEMUSAGE_POLL_INTERVAL\n", polling_interval_sec);
   log_memusage_impl_data.sleep_time.tv_sec = 0;
-  log_memusage_impl_data.sleep_time.tv_nsec = 1e8;
+  while (polling_interval_sec >= 1.)
+    {
+      log_memusage_impl_data.sleep_time.tv_sec += 1;
+      polling_interval_sec -= 1.;
+    }
+  assert (polling_interval_sec < 1.);
+  log_memusage_impl_data.sleep_time.tv_nsec = (int) (1e9 * polling_interval_sec);
 
   log_memusage_impl_data.fptr = NULL;
 

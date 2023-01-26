@@ -5,6 +5,9 @@
 extern "C" {
 #endif
 
+  /*
+   * Public API.
+   */
   int  log_memusage_annotate (const char*);
   int  log_memusage_get ();
   int  log_memusage_report (const char*);
