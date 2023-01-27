@@ -16,6 +16,7 @@
 #include <signal.h>
 #include <assert.h>
 #include <stdarg.h>
+#include <math.h>
 
 #include "log_memusage.h"
 #include "log_memusage_impl.h"
@@ -52,6 +53,7 @@ static struct log_memusage_data_str
   struct timeval start_time;
   struct timespec sleep_time;
 
+  int output_step_cnt;
   int retval;
   int rank;
   pthread_t thread;
@@ -69,11 +71,13 @@ int log_memusage_msg(FILE* f, const char* format, ...)
   static int verbose = 0;
   va_list args;
   int rval;
+
   if (firstcall)
     {
       verbose = (getenv("LOG_MEMUSAGE_VERBOSE") != NULL) ? atoi(getenv("LOG_MEMUSAGE_VERBOSE")) : 0;
       firstcall = false;
     }
+
   if (!verbose)
     return 0;
 
@@ -85,6 +89,24 @@ int log_memusage_msg(FILE* f, const char* format, ...)
   return rval;
 }
 
+
+/*
+__attribute__ ((visibility ("hidden")))
+char * log_memusage_strremove (char *str, const char *sub)
+{
+  char *p, *q, *r;
+  if (*sub && (q = r = strstr(str, sub)) != NULL) {
+    size_t len = strlen(sub);
+    while ((r = strstr(p = r + len, sub)) != NULL) {
+      while (p < r)
+        *q++ = *p++;
+    }
+    while ((*q++ = *p++) != '\0')
+      continue;
+  }
+  return str;
+}
+*/
 
 
 /*
@@ -151,15 +173,28 @@ int log_memusage_parse_smaps(int verbose)
 
 
 
-int log_memusage_annotate(const char* label)
+int log_memusage_annotate (const char* label)
 {
+  static bool firstcall = true;
+  static int do_logging = 0;
   int nchar = -1;
+
+  if (firstcall)
+    {
+      firstcall = false;
+      do_logging = atoi(getenv("LOG_MEMUSAGE_ENABLE_LOGFILE"));
+      log_memusage_msg(stderr, "Found %d for LOG_MEMUSAGE_ENABLE_LOGFILE\n", do_logging);
+    }
+
+  /* quick return */
+  if (!do_logging)
+    return 0;
 
   /* acquire a mutex lock to protect log_memusage_impl_data.fptr, log_memusage_impl_data.sizes */
   pthread_mutex_lock(&log_memusage_impl_data.mutex);
   if (NULL == log_memusage_impl_data.fptr)
     {
-      log_memusage_msg(stderr, "# (memusage) --> logging memory usage for process %d to %s ...\n",
+      log_memusage_msg(stderr, "logging memory usage for process %d to %s ...\n",
                        log_memusage_impl_data.pid,
                        log_memusage_impl_data.filename);
 
@@ -189,7 +224,7 @@ int log_memusage_get()
 
 
 
-int log_memusage_report(const char* prefix)
+int log_memusage_report (const char* prefix)
 {
   const int maxrss_MB = log_memusage_get();
 
@@ -240,32 +275,35 @@ void* log_memusage_execution_thread (void* ptr)
       if (curr_rssMB > mem_tripwire)
         {
           log_memusage_msg(stderr, "killing Process %d for exceeding CPU memory limit: %d > %d\n",
-                  log_memusage_impl_data.pid,
-                  curr_rssMB, mem_tripwire);
+                           log_memusage_impl_data.pid,
+                           curr_rssMB, mem_tripwire);
           pthread_kill(log_memusage_get_parent_thread_ID(), SIGUSR2);
           return NULL;
         }
 
-      gettimeofday(&current_time, NULL);
+      if (NULL != log_memusage_impl_data.fptr)
+        {
+          gettimeofday(&current_time, NULL);
 
-      elapsed_us = (current_time.tv_sec - log_memusage_impl_data.start_time.tv_sec) * 1000000 + current_time.tv_usec - log_memusage_impl_data.start_time.tv_usec;
-      elapsed = elapsed_us / 1000000.;
+          elapsed_us = (current_time.tv_sec - log_memusage_impl_data.start_time.tv_sec) * 1000000 + current_time.tv_usec - log_memusage_impl_data.start_time.tv_usec;
+          elapsed = elapsed_us / 1000000.;
 
-      /* acquire a mutex lock to protect log_memusage_impl_data.fptr, log_memusage_impl_data.sizes */
-      pthread_mutex_lock(&log_memusage_impl_data.mutex);
+          /* acquire a mutex lock to protect log_memusage_impl_data.fptr, log_memusage_impl_data.sizes */
+          pthread_mutex_lock(&log_memusage_impl_data.mutex);
 
-      ierr = log_memusage_parse_smaps(/* verbose = */ 0);
+          ierr = log_memusage_parse_smaps(/* verbose = */ 0);
 
-      fprintf(log_memusage_impl_data.fptr, "%g, %d, %d, %d\n",
-              elapsed,
-              log_memusage_impl_data.sizes.Referenced / 1024,
-              log_memusage_impl_data.sizes.Rss / 1024,
-              log_memusage_impl_data.sizes.Pss / 1024);
+          fprintf(log_memusage_impl_data.fptr, "%g, %d, %d, %d\n",
+                  elapsed,
+                  log_memusage_impl_data.sizes.Referenced / 1024,
+                  log_memusage_impl_data.sizes.Rss / 1024,
+                  log_memusage_impl_data.sizes.Pss / 1024);
 
-      pthread_mutex_unlock(&log_memusage_impl_data.mutex);
-      /* done mutex */
+          pthread_mutex_unlock(&log_memusage_impl_data.mutex);
+          /* done mutex */
 
-      if (ierr) return NULL;
+          if (ierr) return NULL;
+        }
 
       nanosleep(&log_memusage_impl_data.sleep_time, NULL);
     }
@@ -335,17 +373,46 @@ __attribute__ ((constructor (/* priority = */ 1000)))
 void log_memusage_initialize_environment ()
 {
   char str[NAME_MAX];
+  char *fname, *basename, *suffix;
+  extern char **environ;
+  int i=0;
+
   /* printf("..(constructor)... %s, line: %d\n", __FILE__, __LINE__); */
 
   /*
    * Initialize environment variables (conditionally, if not set already.
    */
-  setenv("LOG_MEMUSAGE_VERBOSE",             "0", /* overwrite = */ 0);
-  setenv("LOG_MEMUSAGE_LOGFILE",             "0", /* overwrite = */ 0);
-  setenv("LOG_MEMUSAGE_POLL_INTERVAL",     "0.1", /* overwrite = */ 0);
-  setenv("LOG_MEMUSAGE_OUTPUT_INTERVAL",     "1", /* overwrite = */ 0);
+  setenv("LOG_MEMUSAGE_VERBOSE",                        "0", /* overwrite = */ 0);
+  setenv("LOG_MEMUSAGE_ENABLE_LOGFILE",                 "0", /* overwrite = */ 0);
+  setenv("LOG_MEMUSAGE_LOGFILE_NAME",    "memory_usage.log", /* overwrite = */ 0);
+  setenv("LOG_MEMUSAGE_POLL_INTERVAL",                "0.1", /* overwrite = */ 0);
+  setenv("LOG_MEMUSAGE_OUTPUT_INTERVAL",               "1.", /* overwrite = */ 0);
   sprintf(str, "%d", INT_MAX);
-  setenv("LOG_MEMUSAGE_CPU_MEM_TRIPWIRE",  str,   /* overwrite = */ 0);
+  setenv("LOG_MEMUSAGE_CPU_MEM_TRIPWIRE",               str, /* overwrite = */ 0);
+  setenv("LOG_MEMUSAGE_GPU_MEM_TRIPWIRE",               str, /* overwrite = */ 0);
+
+  while (environ[i])
+    {
+      if (strstr(environ[i], "LOG_MEMUSAGE_"))
+          log_memusage_msg(stderr, "(env) %s\n", environ[i]);
+      i++;
+    }
+
+  /*
+  fname = getenv("LOG_MEMUSAGE_LOGFILE_NAME");
+  basename = fname;
+  printf("%s\n", fname);
+  suffix = strchr(fname, '.');
+
+  if (suffix)
+    {
+      printf ("%s\n", suffix);
+      basename = log_memusage_strremove(basename, suffix);
+
+      printf ("%s\n", suffix);
+    }
+  printf ("%s\n", basename);
+  */
 }
 
 
@@ -366,7 +433,8 @@ void log_memusage_initialize ()
 
   const int nrank_env_vars = sizeof rank_env_vars/64;
 
-  double polling_interval_sec = 0.;
+  double polling_interval_sec = 0., output_interval_sec = 0.;
+  int output_interval_step = 0;
 
   /* call this function from the main thread to register the parent thread ID inside for later use. */
   log_memusage_get_parent_thread_ID();
@@ -402,25 +470,42 @@ void log_memusage_initialize ()
       }
 
   /* build up the output file name, depending on what info we have */
-  if (log_memusage_impl_data.rank != LOG_MEMUSAGE_INVALID_RANK)
-    sprintf(log_memusage_impl_data.filename, "memory_usage-rank_%d.log", log_memusage_impl_data.rank);
-  else
-    sprintf(log_memusage_impl_data.filename, "memory_usage.log");
+  {
+    if (log_memusage_impl_data.rank != LOG_MEMUSAGE_INVALID_RANK)
+      sprintf(log_memusage_impl_data.filename, "memory_usage-rank_%d.log", log_memusage_impl_data.rank);
+    else
+      sprintf(log_memusage_impl_data.filename, "memory_usage.log");
+  }
 
-  /* set up the polling interval, for nanosleep, using input floating point value. */
-  polling_interval_sec = atof(getenv("LOG_MEMUSAGE_POLL_INTERVAL"));
-  log_memusage_msg(stderr, "Using %g as LOG_MEMUSAGE_POLL_INTERVAL\n", polling_interval_sec);
-  log_memusage_impl_data.sleep_time.tv_sec = 0;
-  while (polling_interval_sec >= 1.)
-    {
-      log_memusage_impl_data.sleep_time.tv_sec += 1;
-      polling_interval_sec -= 1.;
-    }
-  assert (polling_interval_sec < 1.);
-  log_memusage_impl_data.sleep_time.tv_nsec = (int) (1e9 * polling_interval_sec);
+  /* set up the polling and output interval timing info */
+  {
+    /* set up the polling interval, for nanosleep, using input floating point value. */
+    polling_interval_sec = atof(getenv("LOG_MEMUSAGE_POLL_INTERVAL"));
+    log_memusage_msg(stderr, "Using %g (sec) as LOG_MEMUSAGE_POLL_INTERVAL\n", polling_interval_sec);
+    /* set up the output interval, user specifies as a float in seconds, but we transform into an
+       integer multiple of polling_interval_sec. */
+    output_interval_sec = atof(getenv("LOG_MEMUSAGE_OUTPUT_INTERVAL"));
+    log_memusage_msg(stderr, "Using %g (sec) as LOG_MEMUSAGE_OUTPUT_INTERVAL\n", output_interval_sec);
+    if (output_interval_sec < polling_interval_sec)
+      output_interval_sec = polling_interval_sec;
+
+    output_interval_step = ceil( output_interval_sec / polling_interval_sec );
+    log_memusage_msg(stderr, "Using %d as output_interval_step\n", output_interval_step);
+    log_memusage_impl_data.output_step_cnt = output_interval_step;
+
+    /* now set the polling time, we modify polling_interval_sec so be careful not to reuse that ... */
+    log_memusage_impl_data.sleep_time.tv_sec = 0;
+    while (polling_interval_sec >= 1.)
+      {
+        log_memusage_impl_data.sleep_time.tv_sec += 1;
+        polling_interval_sec -= 1.;
+      }
+    assert (polling_interval_sec < 1.);
+    log_memusage_impl_data.sleep_time.tv_nsec = (int) (1e9 * polling_interval_sec);
+  }
+
 
   log_memusage_impl_data.fptr = NULL;
-
 
   gettimeofday(&log_memusage_impl_data.start_time, NULL);
 
@@ -440,7 +525,11 @@ void log_memusage_finalize ()
 
   log_memusage_pause();
 
-  fclose(log_memusage_impl_data.fptr);
+  if (NULL != log_memusage_impl_data.fptr)
+    {
+      fclose(log_memusage_impl_data.fptr);
+      log_memusage_impl_data.fptr = NULL;
+    }
 
   log_memusage_report(/* prefix = */ LOG_MEMUSAGE_LOGGING_PREFIX);
 
