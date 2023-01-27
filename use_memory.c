@@ -74,7 +74,7 @@ int main(int argc, char **argv) {
 	if (size <= 0 || size > MAX_SIZE
 	||  repeat < 1 || repeat > MAX_REPEAT
 	||  delay < 0) {
-		fprintf(stderr, "size:%d, repeat:%d, delay:%f\n", size, repeat, delay);
+		fprintf(stderr, "size:%d, repeat:%d, delay:%d\n", size, repeat, delay);
 		printUsage(argv);
 	}
 

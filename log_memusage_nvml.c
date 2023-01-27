@@ -4,6 +4,8 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include <assert.h>
+#include <string.h>
+#include <stdlib.h>
 
 #include "log_memusage.h"
 #include "log_memusage_impl.h"
@@ -56,9 +58,11 @@ int log_memusage_ngpus ()
 
 
 
-__attribute__ ((constructor))
+__attribute__ ((constructor (/* priority = */ 100)))
 int log_memusage_initialize_nvml ()
 {
+  printf("..(constructor)... %s, line: %d\n", __FILE__, __LINE__);
+
   const int verbose = (getenv("LOG_MEMUSAGE_VERBOSE") != NULL) ? atoi(getenv("LOG_MEMUSAGE_VERBOSE")) : 0;
 
   int i =0;
@@ -186,7 +190,7 @@ int log_memusage_get_max_gpu ()
 
 
 
-__attribute__ ((destructor))
+__attribute__ ((destructor  (/* priority = */ 100)))
 int log_memusage_finalize_nvml ()
 {
   nvmlReturn_t result;
