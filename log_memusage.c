@@ -15,6 +15,7 @@
 #include <stdbool.h>
 #include <signal.h>
 #include <assert.h>
+#include <stdarg.h>
 
 #include "log_memusage.h"
 #include "log_memusage_impl.h"

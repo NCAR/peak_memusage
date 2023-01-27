@@ -20,7 +20,7 @@ int main(int argc, char **argv) {
 	char *runme, *space = " ", *extra = "; sleep 1";
         char hn[256];
 	time_t start_time, stop_time;
-	int detailed = 0, error, exit_status, signal, rank=0 /*, poolsize*/;
+	int detailed = 0, /* error, */ exit_status, signal, rank=0 /*, poolsize*/;
 
         gethostname(hn, sizeof(hn) / sizeof(char));
 

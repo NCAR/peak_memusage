@@ -12,8 +12,8 @@
 void log_memusage_print_trace ()
 {
   void *array[50];
-  char **strings;
-  int size, i;
+  /* char **strings; */
+  int size /*, i */;
 
   size = backtrace (array, sizeof(array) / sizeof(void*) );
   fprintf(stderr, "Obtained %d stack frames.\n", size);
