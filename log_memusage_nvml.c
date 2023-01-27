@@ -58,10 +58,10 @@ int log_memusage_ngpus ()
 
 
 
-__attribute__ ((constructor (/* priority = */ 100)))
-int log_memusage_initialize_nvml ()
+__attribute__ ((constructor (/* priority = */ 2000)))
+void log_memusage_initialize_nvml ()
 {
-  printf("..(constructor)... %s, line: %d\n", __FILE__, __LINE__);
+  /* printf("..(constructor)... %s, line: %d\n", __FILE__, __LINE__); */
 
   const int verbose = (getenv("LOG_MEMUSAGE_VERBOSE") != NULL) ? atoi(getenv("LOG_MEMUSAGE_VERBOSE")) : 0;
 
@@ -77,14 +77,14 @@ int log_memusage_initialize_nvml ()
       /* skip this common known issue, when compiled with NVML but running elsewhere */
       if (NVML_ERROR_DRIVER_NOT_LOADED != result)
         fprintf(stderr, "Failed to initialize NVML: %s\n", nvmlErrorString(result));
-      return 1;
+      return;
     }
 
   result = nvmlDeviceGetCount(&log_memusage_impl_nvml_data.device_count);
   if (NVML_SUCCESS != result)
     {
       fprintf(stderr, "Failed to query device count: %s\n", nvmlErrorString(result));
-      return 1;
+      return;
     }
 
   log_memusage_impl_nvml_data.nvml_initialized = true;
@@ -131,7 +131,7 @@ int log_memusage_initialize_nvml ()
 
   const log_memusage_gpu_memory_t gpu_memory = log_memusage_get_each_gpu();
 
-  return 0;
+  return;
 }
 
 
@@ -190,8 +190,8 @@ int log_memusage_get_max_gpu ()
 
 
 
-__attribute__ ((destructor  (/* priority = */ 100)))
-int log_memusage_finalize_nvml ()
+__attribute__ ((destructor  (/* priority = */ 2000)))
+void log_memusage_finalize_nvml ()
 {
   nvmlReturn_t result;
   result = nvmlShutdown();
@@ -201,10 +201,10 @@ int log_memusage_finalize_nvml ()
   if (NVML_SUCCESS != result)
     {
       fprintf(stderr, "Failed to shutdown NVML: %s\n", nvmlErrorString(result));
-      return 1;
+      return;
     }
 
-  return 0;
+  return;
 }
 
 

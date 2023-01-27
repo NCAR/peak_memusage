@@ -330,11 +330,12 @@ __attribute__ ((visibility ("hidden")))
 /*
  * ------------------------------------------------------------------
  */
-__attribute__((constructor (/* priority = */ 1)))
+__attribute__ ((visibility ("hidden")))
+__attribute__ ((constructor (/* priority = */ 1000)))
 void log_memusage_initialize_environment ()
 {
   char str[NAME_MAX];
-  printf("..(constructor)... %s, line: %d\n", __FILE__, __LINE__);
+  /* printf("..(constructor)... %s, line: %d\n", __FILE__, __LINE__); */
 
   /*
    * Initialize environment variables (conditionally, if not set already.
@@ -349,10 +350,10 @@ void log_memusage_initialize_environment ()
 
 
 
-__attribute__((constructor (/* priority = */ 200)))
+__attribute__((constructor (/* priority = */ 3000)))
 void log_memusage_initialize ()
 {
-  printf("..(constructor)... %s, line: %d\n", __FILE__, __LINE__);
+  /* printf("..(constructor)... %s, line: %d\n", __FILE__, __LINE__); */
 
   int v = 0;
   char rank_env_vars[][64] = { "MPI_RANK",
@@ -432,7 +433,7 @@ void log_memusage_initialize ()
 
 
 
-__attribute__((destructor (/* priority = */ 200)))
+__attribute__((destructor (/* priority = */ 3000)))
 void log_memusage_finalize ()
 {
   /* printf("..(destructor)... %s, line: %d\n", __FILE__, __LINE__); */
