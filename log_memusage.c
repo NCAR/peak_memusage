@@ -61,6 +61,7 @@ static struct log_memusage_data_str
 
 
 
+__attribute__ ((visibility ("hidden")))
 int log_memusage_msg(FILE* f, const char* format, ...)
 {
   static bool firstcall = true;
@@ -88,6 +89,7 @@ int log_memusage_msg(FILE* f, const char* format, ...)
 /*
  * https://gist.github.com/avar/896026/c346c7c8e4a9ab18577b4e6abfca37e358de83c1
  */
+__attribute__ ((visibility ("hidden")))
 int log_memusage_parse_smaps(int verbose)
 {
   char line[BUFSIZ];
@@ -207,6 +209,7 @@ int log_memusage_report(const char* prefix)
 
 
 
+__attribute__ ((visibility ("hidden")))
 void* log_memusage_execution_thread (void* ptr)
 {
   static bool firstcall = true;
@@ -307,7 +310,8 @@ int log_memusage_resume ()
 
 
 
-pthread_t log_memusage_get_parent_thread_ID()
+__attribute__ ((visibility ("hidden")))
+ pthread_t log_memusage_get_parent_thread_ID()
 {
   static pthread_t parent_thread_ID;
   static bool firstcall = true;

@@ -8,7 +8,7 @@ check_PROGRAMS =
 lib_LTLIBRARIES =
 include_HEADERS =
 SUBDIRS =
-
+EXTRA_DIST =
 
 
 bin_PROGRAMS += peak_memusage
@@ -35,6 +35,7 @@ pkgconfig_DATA   = log_memusage.pc
 # docs
 #----------------------------------------------------------
 man3_MANS = ./doc/peak_memusage.3 ./doc/log_memusage.3
+EXTRA_DIST += $(man3_MANS)
 
 #----------------------------------------------------------
 # tests
@@ -63,8 +64,7 @@ if OPENMP_BUILD
 endif
 endif
 
-
-EXTRA_DIST = $(TESTS)
+EXTRA_DIST += $(TESTS)
 
 
 mytags:

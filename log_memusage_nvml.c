@@ -157,6 +157,11 @@ log_memusage_gpu_memory_t log_memusage_get_each_gpu ()
 
       gpu_memory.used[i]  = meminfo.used  / 1024 / 1024;
       gpu_memory.free[i]  = meminfo.free  / 1024 / 1024;
+
+      gpu_memory.total_used += gpu_memory.used[i];
+
+      if (gpu_memory.used[i] > gpu_memory.max_used)
+        gpu_memory.max_used = gpu_memory.used[i];
     }
 
   return gpu_memory;
@@ -167,18 +172,7 @@ log_memusage_gpu_memory_t log_memusage_get_each_gpu ()
 int log_memusage_get_all_gpus ()
 {
   const log_memusage_gpu_memory_t gpu_memory = log_memusage_get_each_gpu();
-
-  int used_all_MB=0;
-  int i=0;
-  nvmlReturn_t result;
-
-  if ( ! log_memusage_impl_nvml_data.nvml_initialized )
-    return 0;
-
-  for (i = 0; i < gpu_memory.device_count; i++)
-    used_all_MB += gpu_memory.used[i];
-
-  return used_all_MB;
+  return gpu_memory.total_used;
 }
 
 
@@ -187,22 +181,7 @@ int log_memusage_get_all_gpus ()
 int log_memusage_get_max_gpu ()
 {
   const log_memusage_gpu_memory_t gpu_memory = log_memusage_get_each_gpu();
-
-  int used_max_MB=0;
-  int i=0;
-  nvmlReturn_t result;
-
-  if ( ! log_memusage_impl_nvml_data.nvml_initialized )
-    return 0;
-
-  for (i = 0; i < log_memusage_impl_nvml_data.device_count; i++)
-    {
-      int used_this_MB = gpu_memory.used[i];
-
-      used_max_MB = (used_this_MB > used_max_MB) ? used_this_MB : used_max_MB;
-    }
-
-  return used_max_MB;
+  return gpu_memory.max_used;
 }
 
 

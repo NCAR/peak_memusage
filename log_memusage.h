@@ -25,6 +25,8 @@ extern "C" {
     unsigned int device_count;
     int used[LOG_MEMUSAGE_MAX_GPU_DEVICES];
     int free[LOG_MEMUSAGE_MAX_GPU_DEVICES];
+    int max_used;
+    int total_used;
   };
 
   typedef struct log_memusage_gpu_memory log_memusage_gpu_memory_t;

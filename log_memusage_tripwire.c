@@ -9,6 +9,7 @@
 
 
 /* Obtain a backtrace and print it to stdout. */
+__attribute__ ((visibility ("hidden")))
 void log_memusage_print_trace ()
 {
   void *array[50];
@@ -31,6 +32,7 @@ void log_memusage_print_trace ()
 
 
 
+__attribute__ ((visibility ("hidden")))
 void log_memusage_signal_handler (int signum)
 {
   if ( ! pthread_equal(log_memusage_get_parent_thread_ID(), pthread_self()) )
@@ -73,6 +75,7 @@ void log_memusage_signal_handler (int signum)
 
 
 
+__attribute__ ((visibility ("hidden")))
 void log_memusage_register_signal_handler ()
 {
   const int verbose = (getenv("LOG_MEMUSAGE_VERBOSE")          != NULL) ? atoi(getenv("LOG_MEMUSAGE_VERBOSE")) : 0;
