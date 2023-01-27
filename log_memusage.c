@@ -326,13 +326,31 @@ pthread_t log_memusage_get_parent_thread_ID()
 /*
  * ------------------------------------------------------------------
  */
-__attribute__((constructor))
+__attribute__((constructor (/* priority = */ 1)))
+void log_memusage_initialize_environment ()
+{
+  char str[NAME_MAX];
+  printf("..(constructor)... %s, line: %d\n", __FILE__, __LINE__);
+
+  /*
+   * Initialize environment variables (conditionally, if not set already.
+   */
+  setenv("LOG_MEMUSAGE_VERBOSE",             "0", /* overwrite = */ 0);
+  setenv("LOG_MEMUSAGE_LOGFILE",             "0", /* overwrite = */ 0);
+  setenv("LOG_MEMUSAGE_POLL_INTERVAL",     "0.1", /* overwrite = */ 0);
+  setenv("LOG_MEMUSAGE_OUTPUT_INTERVAL",     "1", /* overwrite = */ 0);
+  sprintf(str, "%d", INT_MAX);
+  setenv("LOG_MEMUSAGE_CPU_MEM_TRIPWIRE",  str,   /* overwrite = */ 0);
+}
+
+
+
+__attribute__((constructor (/* priority = */ 200)))
 void log_memusage_initialize ()
 {
-  /* printf("..(constructor)... %s, line: %d\n", __FILE__, __LINE__); */
+  printf("..(constructor)... %s, line: %d\n", __FILE__, __LINE__);
 
   int v = 0;
-  char str[NAME_MAX];
   char rank_env_vars[][64] = { "MPI_RANK",
                                "MP_CHILD",
                                "PMI_RANK",
@@ -344,16 +362,6 @@ void log_memusage_initialize ()
   const int nrank_env_vars = sizeof rank_env_vars/64;
 
   double polling_interval_sec = 0.;
-
-  /*
-   * Initialize environment variables (conditionally, if not set already.
-   */
-  setenv("LOG_MEMUSAGE_VERBOSE",             "0", /* overwrite = */ 0);
-  setenv("LOG_MEMUSAGE_LOGFILE",             "0", /* overwrite = */ 0);
-  setenv("LOG_MEMUSAGE_POLL_INTERVAL",     "0.1", /* overwrite = */ 0);
-  setenv("LOG_MEMUSAGE_OUTPUT_INTERVAL",     "1", /* overwrite = */ 0);
-  sprintf(str, "%d", INT_MAX);
-  setenv("LOG_MEMUSAGE_CPU_MEM_TRIPWIRE",  str,   /* overwrite = */ 0);
 
   /* call this function from the main thread to register the parent thread ID inside for later use. */
   log_memusage_get_parent_thread_ID();
@@ -420,7 +428,7 @@ void log_memusage_initialize ()
 
 
 
-__attribute__((destructor))
+__attribute__((destructor (/* priority = */ 200)))
 void log_memusage_finalize ()
 {
   /* printf("..(destructor)... %s, line: %d\n", __FILE__, __LINE__); */
