@@ -266,14 +266,23 @@ void* log_memusage_execution_thread (void* ptr)
 
   if (firstcall)
     {
-      char str[NAME_MAX];
+      char str[PATH_MAX], str2[NAME_MAX];
       sprintf(str, "elapsed time (s), CPU RSS (MiB)");
+      strcpy(str2, str);
       ngpus = log_memusage_ngpus();
       if (ngpus == 1)
-        sprintf(str, "%s, GPU (MiB)", str);
+        {
+          sprintf(str, "%s, GPU (MiB)", str2);
+          strcpy(str2, str);
+        }
       else if (ngpus > 1)
-        for (gpu=0; gpu<ngpus; gpu++)
-          sprintf(str, "%s, GPU[%d] (MiB)", str, gpu);
+        {
+          for (gpu=0; gpu<ngpus; gpu++)
+            {
+              sprintf(str, "%s, GPU[%d] (MiB)", str2, gpu);
+              strcpy(str2, str);
+            }
+        }
       log_memusage_annotate(str);
       firstcall = false;
     }

@@ -121,11 +121,11 @@ void log_memusage_initialize_nvml ()
           if (NVML_SUCCESS != result)
             fprintf(stderr, "\nFailed to get memory info for device %u: %s\n", i, nvmlErrorString(result));
 
-          log_memusage_msg(stderr, "%u. %s [%s] mem: {used:%ul free:%ul total:%ul} (MB)\n",
+          log_memusage_msg(stderr, "%u. %s [%s] mem: {used:%d free:%d total:%d} (MB)\n",
                            i, name, pci.busId,
-                           meminfo.used  / 1024 / 1024,
-                           meminfo.free  / 1024 / 1024,
-                           meminfo.total / 1024 / 1024);
+                           (int) (meminfo.used  / 1024 / 1024),
+                           (int) (meminfo.free  / 1024 / 1024),
+                           (int) (meminfo.total / 1024 / 1024));
         }
       printf("sizeof( log_memusage_impl_nvml_data) = %lu\n",  sizeof log_memusage_impl_nvml_data);
     }
