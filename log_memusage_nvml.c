@@ -33,7 +33,8 @@ int log_memusage_get_max_gpu () { return 0; }
 
 
 
-/*
+/**
+ * \private
  * Structure to "hide" implementation details,
  * as much as possible in C anyway...
  */

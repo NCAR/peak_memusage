@@ -22,7 +22,8 @@
 #include "log_memusage_impl.h"
 
 
-/*
+/**
+ * \private
  * Structure to "hide" implementation details,
  * as much as possible in C anyway...
  */
@@ -36,6 +37,9 @@ static struct log_memusage_data_str
   char filename[PATH_MAX];
   FILE *fptr;
 
+  /**
+   * \private
+   */
   struct smaps_sizes {
     int KernelPageSize;
     int MMUPageSize;
