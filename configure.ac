@@ -92,6 +92,7 @@ AC_ARG_ENABLE(doc,
         enable_doc="no"
       fi
     fi
+AM_CONDITIONAL([BUILD_DOCS], [test x"$enable_doc" = xyes])
 
 AC_CONFIG_FILES([
  Makefile

@@ -12,6 +12,9 @@ EXTRA_DIST =
 CLEANFILES =
 BUILT_SOURCES =
 
+#----------------------------------------------------------
+# programs & libraries
+#----------------------------------------------------------
 bin_PROGRAMS += peak_memusage
 peak_memusage_SOURCES = peak_memusage.c
 
@@ -35,12 +38,21 @@ pkgconfig_DATA   = log_memusage.pc
 #----------------------------------------------------------
 # docs
 #----------------------------------------------------------
-doc man: doxygen
+if BUILD_DOCS
 doxygen:
-	$(DOXYGEN) ./doc/Doxyfile
+	$(AM_V_GEN)$(DOXYGEN) -q ./doc/Doxyfile
 
-man3_MANS = #./doc/peak_memusage.3 ./doc/log_memusage.3
-EXTRA_DIST += $(man3_MANS)
+.docstamp: Makefile $(liblog_memusage_la_SOURCES)
+	@$(MAKE) doxygen
+	$(AM_V_GEN)touch $@
+
+man3_MANS = doc/doxygen/man/man3/peak_memusage.3 \
+	    doc/doxygen/man/man3/log_memusage.3 \
+            doc/doxygen/man/man3/log_memusage.h.3
+
+BUILT_SOURCES += .docstamp
+
+endif
 
 #----------------------------------------------------------
 # tests
@@ -70,7 +82,10 @@ endif
 endif
 
 EXTRA_DIST += $(TESTS)
+CLEANFILES += $(BUILT_SOURCES)
 
+clean-local:
+	rm -rf ./doc/doxygen
 
 mytags:
 	cd $(top_srcdir) ; pwd ; \
