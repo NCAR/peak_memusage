@@ -40,7 +40,7 @@ pkgconfig_DATA   = log_memusage.pc
 #----------------------------------------------------------
 if BUILD_DOCS
 doxygen:
-	$(AM_V_GEN)$(DOXYGEN) -q ./doc/Doxyfile
+	$(AM_V_GEN)$(DOXYGEN) ./doc/Doxyfile >/dev/null
 
 .docstamp: Makefile $(liblog_memusage_la_SOURCES)
 	@$(MAKE) doxygen
