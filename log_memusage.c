@@ -113,9 +113,7 @@ char * log_memusage_strremove (char *str, const char *sub)
 */
 
 
-/*
- * https://gist.github.com/avar/896026/c346c7c8e4a9ab18577b4e6abfca37e358de83c1
- */
+/* https://gist.github.com/avar/896026/c346c7c8e4a9ab18577b4e6abfca37e358de83c1 */
 __attribute__ ((visibility ("hidden")))
 int log_memusage_parse_smaps(int verbose)
 {
@@ -177,10 +175,6 @@ int log_memusage_parse_smaps(int verbose)
 
 
 
-/**
- * Insert the specified \p annotation into the memory log file.
- * This is useful for example to annotate what phase of the main program is executing at a given time.
- */
 int log_memusage_annotate (const char* label)
 {
   static bool firstcall = true;
@@ -217,10 +211,6 @@ int log_memusage_annotate (const char* label)
 
 
 
-/**
- * Gets the amount of CPU memory used.
- * \returns The amount of CPU memory currently in use (MB).
- */
 int log_memusage_get()
 {
   struct rusage rus;
@@ -236,10 +226,6 @@ int log_memusage_get()
 
 
 
-/**
- * Prints the current memory usage status to \p stderr.
- * \returns The amount of CPU  memory currently in use (MB).
- */
 int log_memusage_report (const char* prefix)
 {
   const int maxrss_MB = log_memusage_get();
@@ -329,9 +315,6 @@ void* log_memusage_execution_thread (void* ptr)
 
 
 
-/**
- * Pauses memory monitoring by termininaing the execution thread.
- */
 int log_memusage_pause ()
 {
   /* acquire a mutex lock to acquire log_memusage_impl_data.fptr  (make sure not in use) */
@@ -351,9 +334,6 @@ int log_memusage_pause ()
 
 
 
-/**
- * Resumes memory monitoring by restarting the execution thread.
- */
 int log_memusage_resume ()
 {
   /*
@@ -389,9 +369,6 @@ __attribute__ ((visibility ("hidden")))
 
 __attribute__ ((visibility ("hidden")))
 __attribute__ ((constructor (/* priority = */ 1000)))
-/**
- * Initializes the memory logging environment variables to sane defaults.
- */
 void log_memusage_initialize_environment ()
 {
   char str[NAME_MAX];

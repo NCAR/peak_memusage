@@ -125,10 +125,36 @@ extern "C" {
      \endverbatim
   */
 
+  /**
+   * Insert the specified \p annotation into the memory log file.
+   * This is useful for example to annotate what phase of the main program is executing at a given time.
+   */
   int  log_memusage_annotate (const char* annotation);
+
+
+  /**
+   * Gets the amount of CPU memory used.
+   * \returns The amount of CPU memory currently in use (MB).
+   */
   int  log_memusage_get ();
+
+
+  /**
+   * Prints the current memory usage status to \p stderr.
+   * \returns The amount of CPU  memory currently in use (MB).
+   */
   int  log_memusage_report (const char* prefix);
+
+
+  /**
+   * Pauses memory monitoring by termininaing the execution thread.
+   */
   int  log_memusage_pause ();
+
+
+  /**
+   * Resumes memory monitoring by restarting the execution thread.
+   */
   int  log_memusage_resume ();
 
   /**
