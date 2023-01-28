@@ -34,7 +34,7 @@ pkgconfig_DATA   = log_memusage.pc
 #----------------------------------------------------------
 # docs
 #----------------------------------------------------------
-man3_MANS = ./doc/peak_memusage.3 ./doc/log_memusage.3
+man3_MANS = #./doc/peak_memusage.3 ./doc/log_memusage.3
 EXTRA_DIST += $(man3_MANS)
 
 #----------------------------------------------------------

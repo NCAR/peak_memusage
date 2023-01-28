@@ -251,10 +251,11 @@ __attribute__ ((visibility ("hidden")))
 void* log_memusage_execution_thread (void* ptr)
 {
   static bool firstcall = true;
+  static int ngpus = 0;
   struct timeval current_time;
   log_memusage_gpu_memory_t gpu_memory;
-  int ierr = 0, curr_rssMB=0,last_rssMB=0;
-
+  int ierr = 0, curr_rssMB=0, last_rssMB=0, gpu=0;
+  unsigned long step=0;
   double elapsed=0., elapsed_us=0.;
 
   const int mem_tripwire = (getenv("LOG_MEMUSAGE_CPU_MEM_TRIPWIRE") != NULL) ? atoi(getenv("LOG_MEMUSAGE_CPU_MEM_TRIPWIRE")) : INT_MAX;
@@ -265,13 +266,21 @@ void* log_memusage_execution_thread (void* ptr)
 
   if (firstcall)
     {
-      const int ngpus = log_memusage_ngpus();
-      log_memusage_annotate("elapsed time (s), Referenced (MiB), RSS (MiB), PSS (MiB)");
+      char str[NAME_MAX];
+      sprintf(str, "elapsed time (s), CPU RSS (MiB)");
+      ngpus = log_memusage_ngpus();
+      if (ngpus == 1)
+        sprintf(str, "%s, GPU (MiB)", str);
+      else if (ngpus > 1)
+        for (gpu=0; gpu<ngpus; gpu++)
+          sprintf(str, "%s, GPU[%d] (MiB)", str, gpu);
+      log_memusage_annotate(str);
       firstcall = false;
     }
 
-  while (true)
+  for (step=0; ; step++)
     {
+      last_rssMB = curr_rssMB;
       curr_rssMB = log_memusage_get();
 
       if (curr_rssMB > mem_tripwire)
@@ -283,28 +292,53 @@ void* log_memusage_execution_thread (void* ptr)
           return NULL;
         }
 
+      if (ngpus > 0)
+        {
+          gpu_memory = log_memusage_get_each_gpu();
+        }
+
+
+      /* only bother with any I/O if the log file has been opened */
       if (NULL != log_memusage_impl_data.fptr)
         {
-          gettimeofday(&current_time, NULL);
+          /* Do we want to log this step? */
+          bool print_step = false;
+          print_step = print_step || (curr_rssMB != last_rssMB);
+          print_step = print_step || (step % log_memusage_impl_data.output_step_cnt == 0);
 
-          elapsed_us = (current_time.tv_sec - log_memusage_impl_data.start_time.tv_sec) * 1000000 + current_time.tv_usec - log_memusage_impl_data.start_time.tv_usec;
-          elapsed = elapsed_us / 1000000.;
+          if (print_step)
+            {
+              gettimeofday(&current_time, NULL);
 
-          /* acquire a mutex lock to protect log_memusage_impl_data.fptr, log_memusage_impl_data.sizes */
-          pthread_mutex_lock(&log_memusage_impl_data.mutex);
+              elapsed_us = ((current_time.tv_sec  - log_memusage_impl_data.start_time.tv_sec) * 1000000 +
+                            (current_time.tv_usec - log_memusage_impl_data.start_time.tv_usec));
+              elapsed = elapsed_us / 1000000.;
 
-          ierr = log_memusage_parse_smaps(/* verbose = */ 0);
+              /* acquire a mutex lock to protect log_memusage_impl_data.fptr, log_memusage_impl_data.sizes */
+              pthread_mutex_lock(&log_memusage_impl_data.mutex);
 
-          fprintf(log_memusage_impl_data.fptr, "%g, %d, %d, %d\n",
-                  elapsed,
-                  log_memusage_impl_data.sizes.Referenced / 1024,
-                  log_memusage_impl_data.sizes.Rss / 1024,
-                  log_memusage_impl_data.sizes.Pss / 1024);
+              ierr = log_memusage_parse_smaps(/* verbose = */ 0);
 
-          pthread_mutex_unlock(&log_memusage_impl_data.mutex);
-          /* done mutex */
+              /* fprintf(log_memusage_impl_data.fptr, "%g, %d, %d, %d\n", */
+              /*         elapsed, */
+              /*         log_memusage_impl_data.sizes.Referenced / 1024, */
+              /*         log_memusage_impl_data.sizes.Rss / 1024, */
+              /*         log_memusage_impl_data.sizes.Pss / 1024); */
 
-          if (ierr) return NULL;
+              fprintf(log_memusage_impl_data.fptr, "%g, %d",
+                      elapsed,
+                      log_memusage_impl_data.sizes.Rss / 1024);
+              for (gpu=0; gpu<ngpus; gpu++)
+                fprintf(log_memusage_impl_data.fptr, ", %d",
+                        gpu_memory.used[gpu]);
+              fprintf(log_memusage_impl_data.fptr, "\n");
+
+
+              pthread_mutex_unlock(&log_memusage_impl_data.mutex);
+              /* done mutex */
+
+              if (ierr) return NULL;
+            }
         }
 
       nanosleep(&log_memusage_impl_data.sleep_time, NULL);
