@@ -9,7 +9,8 @@ lib_LTLIBRARIES =
 include_HEADERS =
 SUBDIRS =
 EXTRA_DIST =
-
+CLEANFILES =
+BUILT_SOURCES =
 
 bin_PROGRAMS += peak_memusage
 peak_memusage_SOURCES = peak_memusage.c
@@ -34,6 +35,10 @@ pkgconfig_DATA   = log_memusage.pc
 #----------------------------------------------------------
 # docs
 #----------------------------------------------------------
+doc man: doxygen
+doxygen:
+	$(DOXYGEN) ./doc/Doxyfile
+
 man3_MANS = #./doc/peak_memusage.3 ./doc/log_memusage.3
 EXTRA_DIST += $(man3_MANS)
 

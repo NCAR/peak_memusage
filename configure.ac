@@ -44,41 +44,59 @@ fi
 AM_CONDITIONAL([OPENMP_BUILD], [test x"$enable_openmp" = xyes])
 
 
+
 AC_ARG_ENABLE(nvml,
-    [  --enable-nvml            Include Nvidia NVML interface.],
-    [enable_nvml=$enableval],
-    [enable_nvml="yes"])
+              [  --enable-nvml           Include Nvidia NVML interface.],
+              [enable_nvml=$enableval],
+              [enable_nvml="yes"])
 if test "x$enable_nvml" = "xyes"; then
-  AC_CHECK_PROG([NVIDIA_SMI], [nvidia-smi])
+  AC_PATH_PROG([NVIDIA_SMI], [nvidia-smi])
   AC_CHECK_HEADER([nvml.h], [], [enable_nvml=no])
   AC_CHECK_LIB([nvidia-ml], [nvmlInit],[], [enable_nvml=no])
-if test "x$enable_nvml" = "xyes"; then
-  AC_DEFINE([ENABLE_NVML], [1], [Build with NVML GPU support])
+  if test "x$enable_nvml" = "xyes"; then
+    AC_DEFINE([ENABLE_NVML], [1], [Build with NVML GPU support])
     AC_MSG_RESULT([<<< Enabling Nvidia NVML GPU support. >>>])
   fi
 fi
 
+
+
 AC_ARG_ENABLE(mpi,
-    [  --enable-mpi            Include MPI interface.],
-    [enable_mpi=$enableval],
-    [enable_mpi="yes"])
-    if test "x$enable_mpi" = "xyes"; then
-      AC_LANG_PUSH([C++])
-      AX_MPI([found_mpicxx=yes], [found_mpicxx=no])
-      AC_LANG_POP([C++])
-      AX_MPI([found_mpi=yes], [found_mpi=no; enable_mpi=no])
-      if test "x$found_mpi" = "xyes"; then
-        AC_CHECK_PROGS([MPIEXEC], [mpiexec mpiexec_mpt mpirun], [mpiexec])
-        AC_DEFINE([ENABLE_MPI], [1], [Build with MPI support (really only used for test suite)])
-        AC_MSG_RESULT([<<< Enabling MPI support (used in test suite only). >>>])
-        #CC="$MPICC"
+              [  --enable-mpi            Include MPI interface.],
+              [enable_mpi=$enableval],
+              [enable_mpi="yes"])
+if test "x$enable_mpi" = "xyes"; then
+  AC_LANG_PUSH([C++])
+  AX_MPI([found_mpicxx=yes], [found_mpicxx=no])
+  AC_LANG_POP([C++])
+  AX_MPI([found_mpi=yes], [found_mpi=no; enable_mpi=no])
+  if test "x$found_mpi" = "xyes"; then
+    AC_CHECK_PROGS([MPIEXEC], [mpiexec mpiexec_mpt mpirun], [mpiexec])
+    AC_DEFINE([ENABLE_MPI], [1], [Build with MPI support (really only used for test suite)])
+    AC_MSG_RESULT([<<< Enabling MPI support (used in test suite only). >>>])
+    #CC="$MPICC"
+  fi
+fi
+AM_CONDITIONAL([MPI_BUILD], [test x"$enable_mpi" = xyes])
+
+
+
+AC_ARG_ENABLE(doc,
+              [  --enable-doc            Build documentation (requires doxygen).],
+              [enable_doc=$enableval],
+              [enable_doc="yes"])
+    if test "x$enable_doc" = "xyes"; then
+      AC_PROG_MKDIR_P
+      AC_PATH_PROG([DOXYGEN], [doxygen], [disable])
+      if test "x$DOXYGEN" = "xdisable"; then
+        enable_doc="no"
       fi
     fi
-AM_CONDITIONAL([MPI_BUILD], [test x"$enable_mpi" = xyes])
 
 AC_CONFIG_FILES([
  Makefile
  mpi/Makefile
+ doc/Doxyfile
  log_memusage.pc
 ])
 AC_OUTPUT

@@ -49,6 +49,10 @@ if test "x${enable_mpi}" = "xyes"; then
   echo '      MPICXX.................. :' ${MPICXX}
   echo '      MPIEXEC................. :' ${MPIEXEC}
 fi
+echo '   Documentation.............. :' ${enable_doc}
+if test "x${enable_doc}" = "xyes"; then
+  echo '      DOXYGEN................. :' ${DOXYGEN}
+fi
 echo '-------------------------------------------------------------------------------'
 
 echo
