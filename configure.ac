@@ -84,7 +84,7 @@ AM_CONDITIONAL([MPI_BUILD], [test x"$enable_mpi" = xyes])
 AC_ARG_ENABLE(doc,
               [  --enable-doc            Build documentation (requires doxygen).],
               [enable_doc=$enableval],
-              [enable_doc="yes"])
+              [enable_doc="no"])
     if test "x$enable_doc" = "xyes"; then
       AC_PROG_MKDIR_P
       AC_PATH_PROG([DOXYGEN], [doxygen], [disable])

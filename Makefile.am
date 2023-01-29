@@ -1,4 +1,5 @@
 ACLOCAL_AMFLAGS = -I m4
+AM_DISTCHECK_CONFIGURE_FLAGS = --enable-doc
 
 TESTS =
 XFAIL_TESTS =
@@ -51,6 +52,7 @@ man3_MANS = doc/doxygen/man/man3/peak_memusage.3 \
             doc/doxygen/man/man3/log_memusage.h.3
 
 BUILT_SOURCES += .docstamp
+EXTRA_DIST += $(man3_MANS)
 
 endif
 
