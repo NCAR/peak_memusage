@@ -1,0 +1,82 @@
+.TH "log_memusage" 3 "Sun Jan 29 2023" "Log Memusage" \" -*- nroff -*-
+.ad l
+.nh
+.SH NAME
+log_memusage \- \fClog_memusage\fP bar 
+.SH "NAME"
+.PP
+\fClog_memusage\fP - Logs memory usage history of an application\&.
+.SH "SYNOPSIS"
+.PP
+.PP
+.nf
+$ gcc -o my_app my_app\&.c -llog_memusage
+$ \&./my_app
+
+$ mpiexec -x LD_PRELOAD=/path/to/liblog_memusage\&.so <mpi_program>
+.fi
+.PP
+.SH "DESCRIPTION"
+.PP
+\fClog_memusage\fP is a library that monitors and reports application memory usage\&.
+.SH "ENVIRONMENT"
+.PP
+.SS "Environment Variables"
+.SS "LOG_MEMUSAGE"
+If enabled (1), logs memory usage vs\&. time to the output file 'memory_usage\&.log'\&.
+.PP
+Default: 0
+.SS "LOG_MEMUSAGE_POLL_INTERVAL"
+Floating point value specifying the polling frequency (in seconds)\&.
+.PP
+Default: 0\&.1
+.SS "LOG_MEMUSAGE_OUTPUT_INTERVAL"
+Integer value specifying output frequency, in multiples of LOG_MEMUSAGE_POLL_INTERVAL\&. For example, a value of 10 will update the memory usage output log file every 10 polling intervals\&.
+.PP
+Default: 1
+.SH "EXAMPLES"
+.PP
+.SS "Baseline uninstrumented program:"
+.PP
+.nf
+$ \&./use_memory -s 50000000
+Allocating, using and freeing 50000000 ints (190\&.73 MiB) in thread 0/1
+.fi
+.PP
+.SS "Using LD_PRELOAD to instrument an existing program:"
+.PP
+.nf
+$ LD_PRELOAD=\&./liblog_memusage\&.so \&./use_memory -s 50000000
+logging memory usage for process 103284 to memory_usage\&.log \&.\&.\&.
+Allocating, using and freeing 50000000 ints (190\&.73 MiB) in thread 0/1
+# (memusage) --> casper-login2 / PID 103284, peak used memory: 213 MiB
+.fi
+.PP
+.SS "Using LD_PRELOAD to instrument an existing OpenMP program:"
+.PP
+.nf
+$ LD_PRELOAD=\&./liblog_memusage\&.so OMP_NUM_THREADS=6 \&./use_memory_openmp -s 50000000
+logging memory usage for process 106876 to memory_usage\&.log \&.\&.\&.
+Allocating, using and freeing 100000000 ints (381\&.47 MiB) in thread 1/6
+Allocating, using and freeing 200000000 ints (762\&.94 MiB) in thread 3/6
+Allocating, using and freeing 150000000 ints (572\&.20 MiB) in thread 2/6
+Allocating, using and freeing 50000000 ints (190\&.73 MiB) in thread 0/6
+Allocating, using and freeing 250000000 ints (953\&.67 MiB) in thread 4/6
+Allocating, using and freeing 300000000 ints (1144\&.41 MiB) in thread 5/6
+# (memusage) --> casper-login2 / PID 106876, peak used memory: 4036 MiB
+.fi
+.PP
+.SS "Using pkg-config configuration to link with an application:"
+.PP
+.nf
+# compile:
+$ gcc -o use_memory \&./use_memory\&.c $(pkg-config log_memusage --libs --cflags)
+
+# run:
+$ \&./use_memory
+logging memory usage for process 111615 to memory_usage\&.log \&.\&.\&.
+Allocating, using and freeing 1000000 ints (3\&.81 MiB) in thread 0/1
+# (memusage) --> casper-login2 / PID 111615, peak used memory: 24 MiB
+.fi
+.PP
+ 

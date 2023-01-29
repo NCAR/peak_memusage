@@ -39,20 +39,31 @@ pkgconfig_DATA   = log_memusage.pc
 #----------------------------------------------------------
 # docs
 #----------------------------------------------------------
-if BUILD_DOCS
-doxygen:
-	$(AM_V_GEN)$(DOXYGEN) ./doc/Doxyfile >/dev/null
+cached_mans = doc/dist/peak_memusage.3 \
+	      doc/dist/log_memusage.3 \
+              doc/dist/log_memusage.h.3
 
-.docstamp: Makefile $(liblog_memusage_la_SOURCES)
-	@$(MAKE) doxygen
-	$(AM_V_GEN)touch $@
+EXTRA_DIST += $(cached_mans)
+
+if BUILD_DOCS
 
 man3_MANS = doc/doxygen/man/man3/peak_memusage.3 \
 	    doc/doxygen/man/man3/log_memusage.3 \
             doc/doxygen/man/man3/log_memusage.h.3
+doxygen:
+	$(AM_V_GEN)$(DOXYGEN) ./doc/Doxyfile >/dev/null &&  \
+	for file in $(man3_MANS); do \
+	  cp -f $${file} $(top_srcdir)/doc/dist/ || continue ; \
+	done
 
-BUILT_SOURCES += .docstamp
-EXTRA_DIST += $(man3_MANS)
+docstamp: Makefile $(liblog_memusage_la_SOURCES)
+	@$(MAKE) doxygen
+	$(AM_V_GEN)touch $@
+
+BUILT_SOURCES += docstamp
+else
+
+man3_MANS = $(cached_mans)
 
 endif
 
@@ -83,6 +94,10 @@ if OPENMP_BUILD
 endif
 endif
 
+
+#----------------------------------------------------------
+# final details
+#----------------------------------------------------------
 EXTRA_DIST += $(TESTS)
 CLEANFILES += $(BUILT_SOURCES)
 

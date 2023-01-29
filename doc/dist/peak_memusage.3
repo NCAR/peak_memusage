@@ -1,0 +1,38 @@
+.TH "peak_memusage" 3 "Sun Jan 29 2023" "Log Memusage" \" -*- nroff -*-
+.ad l
+.nh
+.SH NAME
+peak_memusage \- \fCpeak_memusage\fP foo 
+.SH "NAME"
+.PP
+\fCpeak_memusage\fP - Determine the high-water mark memory usage of an application\&.
+.SH "SYNOPSIS"
+.PP
+.PP
+.nf
+$ peak_memusage <program> --args --for-program
+
+$ mpiexec peak_memusage <mpi_program>
+.fi
+.PP
+.SH "DESCRIPTION"
+.PP
+peak_memusage determines the high-water mark of an applciation's memory usage\&.
+.PP
+This utility is a wrapper around getrusage, which reports peak memory use of any executable\&. It is OpenMP and MPI aware and tries to report thread- and task- specific data\&. Of course, being OpenMP shared memory, that report cannot really separate thread-specific memory use\&.
+.PP
+Note that the memory usage is reported only at the end of the run\&.
+.SH "OPTIONS"
+.PP
+The peak_memusage does not take any options\&.
+.SH "EXAMPLES"
+.PP
+.PP
+.nf
+$ \&./peak_memusage \&./use_memory
+Running: \&./use_memory; sleep 1  - Please wait\&.\&.\&.
+Allocating, using and freeing 1000000 ints (3\&.81 MiB) in thread 0/1
+casper-login2 used memory in task 0: 30\&.82MiB (+23\&.03MiB overhead)\&. ExitStatus: 0\&. Signal: 0
+.fi
+.PP
+ 
