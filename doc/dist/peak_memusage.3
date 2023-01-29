@@ -17,9 +17,9 @@ $ mpiexec peak_memusage <mpi_program>
 .PP
 .SH "DESCRIPTION"
 .PP
-peak_memusage determines the high-water mark of an applciation's memory usage\&.
+peak_memusage determines the high-water mark of an application's memory usage\&.
 .PP
-This utility is a wrapper around getrusage, which reports peak memory use of any executable\&. It is OpenMP and MPI aware and tries to report thread- and task- specific data\&. Of course, being OpenMP shared memory, that report cannot really separate thread-specific memory use\&.
+This utility is a wrapper around \fCgetrusage\fP, which reports peak memory use of any executable\&. It is OpenMP and MPI aware and tries to report thread- and task- specific data\&. Of course, being OpenMP shared memory, that report cannot really separate thread-specific memory use\&.
 .PP
 Note that the memory usage is reported only at the end of the run\&.
 .SH "OPTIONS"

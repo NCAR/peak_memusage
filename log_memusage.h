@@ -25,9 +25,9 @@ extern "C" {
 
      \section peak_memusageDESCRIPTION DESCRIPTION
      peak_memusage determines the high-water mark of an
-     applciation's memory usage.
+     application's memory usage.
 
-     This utility is a wrapper around getrusage, which reports peak
+     This utility is a wrapper around \p getrusage, which reports peak
      memory use of any executable. It is OpenMP and MPI aware and
      tries to report thread- and task- specific data. Of course,
      being OpenMP shared memory, that report cannot really separate
@@ -66,22 +66,40 @@ extern "C" {
      \p log_memusage is a library that monitors and reports application memory usage.
 
      \section log_memusageENVIRONMENT ENVIRONMENT
-     \subsection General Environment Variables
-     \subsubsection  LOG_MEMUSAGE
-     If enabled (1), logs memory usage vs. time to the output file "memory_usage.log".
+
+     General Environment Variables
+
+     \subsection  LOG_MEMUSAGE_VERBOSE
+     If enabled (1), prints key library events to \p stderr.
 
      Default: 0
 
-     \subsubsection  LOG_MEMUSAGE_POLL_INTERVAL
+     \subsection  LOG_MEMUSAGE_ENABLE_LOGFILE
+     If enabled (1), logs memory usage vs. time to the output file "memory_usage.log",
+     or \p LOG_MEMUSAGE_LOGFILE_NAME.
+
+     Default: 0
+
+     \subsection  LOG_MEMUSAGE_LOGFILE_NAME
+     When \p LOG_MEMUSAGE_ENABLE_LOGFILE is enabled, \p LOG_MEMUSAGE_LOGFILE_NAME specifies the name of the
+     output logfile.  Can be a relative or full path.  MPI rank information will be appended, if detected at run time.
+
+     Default: "memory_usage.log"
+
+     \subsection  LOG_MEMUSAGE_POLL_INTERVAL
      Floating point value specifying the polling frequency (in seconds).
 
-     Default: 0.1
+     Default: 0.1 (sec)
 
-     \subsubsection  LOG_MEMUSAGE_OUTPUT_INTERVAL
-     Integer value specifying output frequency, in multiples of LOG_MEMUSAGE_POLL_INTERVAL.  For example, a value of 10 will update the memory usage output
-     log file every 10 polling intervals.
+     \subsection  LOG_MEMUSAGE_OUTPUT_INTERVAL
+     Floating point value specifying the output frequency (in seconds).  Must be greater than or equal to \p LOG_MEMUSAGE_POLL_INTERVAL.
 
-     Default: 1
+     Default: 1.0 (sec)
+
+     \subsection LOG_MEMUSAGE_TRIPWIRES LOG_MEMUSAGE_CPU_MEM_TRIPWIRE, LOG_MEMUSAGE_GPU_MEM_TRIPWIRE
+     If enabled, kill the application immediately if it exceeds the specified value (MB).
+
+     Default: \p INT_MAX (MB)
 
      \section log_memusageEXAMPLES EXAMPLES
      \subsection baseline Baseline uninstrumented program:
@@ -228,3 +246,5 @@ extern "C" {
 }
 #endif
 #endif /* #define LOG_MEMUSAGE_H */
+
+//  LocalWords:  memusage subsubsection LOGFILE logfile

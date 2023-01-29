@@ -21,19 +21,31 @@ $ mpiexec -x LD_PRELOAD=/path/to/liblog_memusage\&.so <mpi_program>
 \fClog_memusage\fP is a library that monitors and reports application memory usage\&.
 .SH "ENVIRONMENT"
 .PP
-.SS "Environment Variables"
-.SS "LOG_MEMUSAGE"
-If enabled (1), logs memory usage vs\&. time to the output file 'memory_usage\&.log'\&.
+General Environment Variables
+.SS "LOG_MEMUSAGE_VERBOSE"
+If enabled (1), prints key library events to \fCstderr\fP\&.
 .PP
 Default: 0
+.SS "LOG_MEMUSAGE_ENABLE_LOGFILE"
+If enabled (1), logs memory usage vs\&. time to the output file 'memory_usage\&.log', or \fCLOG_MEMUSAGE_LOGFILE_NAME\fP\&.
+.PP
+Default: 0
+.SS "LOG_MEMUSAGE_LOGFILE_NAME"
+When \fCLOG_MEMUSAGE_ENABLE_LOGFILE\fP is enabled, \fCLOG_MEMUSAGE_LOGFILE_NAME\fP specifies the name of the output logfile\&. Can be a relative or full path\&. MPI rank information will be appended, if detected at run time\&.
+.PP
+Default: 'memory_usage\&.log'
 .SS "LOG_MEMUSAGE_POLL_INTERVAL"
 Floating point value specifying the polling frequency (in seconds)\&.
 .PP
-Default: 0\&.1
+Default: 0\&.1 (sec)
 .SS "LOG_MEMUSAGE_OUTPUT_INTERVAL"
-Integer value specifying output frequency, in multiples of LOG_MEMUSAGE_POLL_INTERVAL\&. For example, a value of 10 will update the memory usage output log file every 10 polling intervals\&.
+Floating point value specifying the output frequency (in seconds)\&. Must be greater than or equal to \fCLOG_MEMUSAGE_POLL_INTERVAL\fP\&.
 .PP
-Default: 1
+Default: 1\&.0 (sec)
+.SS "LOG_MEMUSAGE_CPU_MEM_TRIPWIRE, LOG_MEMUSAGE_GPU_MEM_TRIPWIRE"
+If enabled, kill the application immediately if it exceeds the specified value (MB)\&.
+.PP
+Default: \fCINT_MAX\fP (MB)
 .SH "EXAMPLES"
 .PP
 .SS "Baseline uninstrumented program:"
