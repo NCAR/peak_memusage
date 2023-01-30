@@ -6,10 +6,7 @@
 #include <unistd.h>     /* gethostname */
 #include <assert.h>
 
-#define ANNOTATE
-#ifdef ANNOTATE
-# include "log_memusage.h"
-#endif
+#include "log_memusage.h"
 
 
 
@@ -30,6 +27,12 @@ void touch_mem(int* buf, int cnt)
 void malloc_and_touch(int* buf, int cnt)
 {
   int i;
+
+  if (NULL != buf)
+    {
+      free(buf);
+      buf = NULL;
+    }
 
   assert (NULL == buf);
   buf = (int*) malloc( cnt * sizeof(int));
@@ -54,28 +57,21 @@ int main (int argc, char **argv)
   sleep(2);
 
   printf("allocating memory\n");
-#ifdef ANNOTATE
   log_memusage_annotate("allocating memory");
-#endif
   malloc_and_touch(buf, 1e7);
   sleep(1);
 
   printf("freeing memory\n");
-#ifdef ANNOTATE
   log_memusage_annotate("freeing memory");
-#endif
-  free(buf);
   sleep(1);
 
   printf("allocating more memory\n");
-#ifdef ANNOTATE
   log_memusage_annotate("allocating more memory");
-#endif
   malloc_and_touch(buf, 5e7);
   sleep(1);
 
   printf("freeing memory\n");
-  free(buf);
+  free(buf); buf = NULL;
   sleep(1);
 
 }
