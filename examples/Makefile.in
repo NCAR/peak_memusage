@@ -1,5 +1,8 @@
 # this is NOT an automake makefile, it is a template
 # plain old GNU Makefile to be used outside the build system
+
+all: sample_fortran
+
 VPATH := @abs_top_srcdir@/examples
 
 CXX := @CXX@
