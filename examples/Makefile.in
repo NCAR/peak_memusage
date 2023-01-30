@@ -23,5 +23,7 @@ echo:
 	@echo "CFLAGS=$(CFLAGS)"
 	@echo "LIBS=$(LIBS)"
 	@echo
+	@echo "VPATH=$(VPATH)"
+	@echo
 	@echo "PKG_CONFIG=$(PKG_CONFIG)"
 	@echo "PKG_CONFIG_PATH=$(PKG_CONFIG_PATH)"
