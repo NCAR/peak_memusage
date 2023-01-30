@@ -185,8 +185,20 @@ extern "C" {
    */
   void log_memusage_finalize ();
 
+  /**
+   * Maximum number of GPUs supported on a single host.
+   */
 #ifndef LOG_MEMUSAGE_MAX_GPU_DEVICES
 #  define LOG_MEMUSAGE_MAX_GPU_DEVICES 8
+#endif
+
+  /**
+   * \p getrusage() returns bytes on OSX, kbytes on Linux.  Handle apropriately.
+   */
+#if defined(__APPLE__)
+#   define LOG_MEMUSAGE_OS_RSUSAGE_TO_MB (1024*1024)
+#else
+#   define LOG_MEMUSAGE_OS_RSUSAGE_TO_MB (1024)
 #endif
 
   /**
@@ -220,6 +232,9 @@ extern "C" {
     int total_used;
   };
 
+  /**
+   * Simple typedef for using \p log_memusage_gpu_memory structs.
+   */
   typedef struct log_memusage_gpu_memory log_memusage_gpu_memory_t;
 
   /**

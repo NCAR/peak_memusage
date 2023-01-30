@@ -60,6 +60,7 @@ static struct log_memusage_data_str
   int output_step_cnt;
   int retval;
   int rank;
+  int maxGPU_MB;
   pthread_t thread;
   pthread_mutex_t mutex;
   bool running;
@@ -69,7 +70,7 @@ static struct log_memusage_data_str
 
 
 __attribute__ ((visibility ("hidden")))
-int log_memusage_msg(FILE* f, const char* format, ...)
+int log_memusage_msg (FILE* f, const char* format, ...)
 {
   static bool firstcall = true;
   static int verbose = 0;
@@ -94,7 +95,7 @@ int log_memusage_msg(FILE* f, const char* format, ...)
 }
 
 
-/*
+
 __attribute__ ((visibility ("hidden")))
 char * log_memusage_strremove (char *str, const char *sub)
 {
@@ -110,21 +111,21 @@ char * log_memusage_strremove (char *str, const char *sub)
   }
   return str;
 }
-*/
+
 
 
 /* https://gist.github.com/avar/896026/c346c7c8e4a9ab18577b4e6abfca37e358de83c1 */
 __attribute__ ((visibility ("hidden")))
-int log_memusage_parse_smaps(int verbose)
+int log_memusage_parse_smaps (int verbose)
 {
   char line[BUFSIZ];
   FILE *file = fopen(log_memusage_impl_data.smapsname, "r");
 
-  if (!file) {
-    perror(line);
-
-    return -1;
-  }
+  if (!file)
+    {
+      perror(line);
+      return -1;
+    }
 
   if (verbose > 1)
     printf(" --> reading memory summary from %s\n", log_memusage_impl_data.smapsname);
@@ -183,9 +184,9 @@ int log_memusage_annotate (const char* label)
 
   if (firstcall)
     {
-      firstcall = false;
       do_logging = atoi(getenv("LOG_MEMUSAGE_ENABLE_LOGFILE"));
       log_memusage_msg(stderr, "Found %d for LOG_MEMUSAGE_ENABLE_LOGFILE\n", do_logging);
+      firstcall = false;
     }
 
   /* quick return */
@@ -211,24 +212,26 @@ int log_memusage_annotate (const char* label)
 
 
 
-int log_memusage_get()
+int log_memusage_get ()
 {
   struct rusage rus;
 
   if (getrusage(RUSAGE_SELF, &rus))
     {
       log_memusage_msg(stderr, "Problem getting resource usage\n");
-      return -1.;
+      return -1;
     }
 
-  return rus.ru_maxrss/1024;
+  return (rus.ru_maxrss / LOG_MEMUSAGE_OS_RSUSAGE_TO_MB);
 }
 
 
 
 int log_memusage_report (const char* prefix)
 {
-  const int maxrss_MB = log_memusage_get();
+  const int
+    maxrss_MB = log_memusage_get(),
+    ngpus = log_memusage_ngpus();
 
   fprintf(stderr, "%s%s / PID %d",
           prefix,
@@ -239,8 +242,12 @@ int log_memusage_report (const char* prefix)
     fprintf(stderr, " / MPI Rank %d",
             log_memusage_impl_data.rank);
 
-  fprintf(stderr, ", peak used memory: %d MiB\n",
+  fprintf(stderr, ", peak used memory: %d MiB",
           maxrss_MB);
+  if (ngpus > 0)
+    fprintf(stderr, " (CPU), %d MiB (GPU)",
+            log_memusage_impl_data.maxGPU_MB);
+  fprintf(stderr, "\n");
 
   return maxrss_MB;
 }
@@ -254,13 +261,15 @@ void* log_memusage_execution_thread (void* ptr)
   static int ngpus = 0;
   struct timeval current_time;
   log_memusage_gpu_memory_t gpu_memory;
-  int ierr = 0, curr_rssMB=0, last_rssMB=0, gpu=0;
+  int ierr = 0, curr_rssMB=0, last_rssMB=0, last_maxGPU_MB=0, gpu=0;
   unsigned long step=0;
   double elapsed=0., elapsed_us=0.;
 
-  const int mem_tripwire = (getenv("LOG_MEMUSAGE_CPU_MEM_TRIPWIRE") != NULL) ? atoi(getenv("LOG_MEMUSAGE_CPU_MEM_TRIPWIRE")) : INT_MAX;
+  const int cpu_mem_tripwire = (getenv("LOG_MEMUSAGE_CPU_MEM_TRIPWIRE") != NULL) ? atoi(getenv("LOG_MEMUSAGE_CPU_MEM_TRIPWIRE")) : INT_MAX;
+  const int gpu_mem_tripwire = (getenv("LOG_MEMUSAGE_GPU_MEM_TRIPWIRE") != NULL) ? atoi(getenv("LOG_MEMUSAGE_GPU_MEM_TRIPWIRE")) : INT_MAX;
 
-  log_memusage_msg(stderr, "Using %d MB as LOG_MEMUSAGE_CPU_MEM_TRIPWIRE\n", mem_tripwire);
+  log_memusage_msg(stderr, "Using %d MB as LOG_MEMUSAGE_CPU_MEM_TRIPWIRE\n", cpu_mem_tripwire);
+  log_memusage_msg(stderr, "Using %d MB as LOG_MEMUSAGE_GPU_MEM_TRIPWIRE\n", gpu_mem_tripwire);
 
   /* log_memusage_parse_smaps (/\* verbose = *\/ 2); */
 
@@ -278,16 +287,18 @@ void* log_memusage_execution_thread (void* ptr)
       firstcall = false;
     }
 
+  /* main execution / monitoring loop */
   for (step=0; ; step++)
     {
-      last_rssMB = curr_rssMB;
-      curr_rssMB = log_memusage_get();
+      last_rssMB     = curr_rssMB;
+      curr_rssMB     = log_memusage_get();
+      last_maxGPU_MB = gpu_memory.max_used;
 
-      if (curr_rssMB > mem_tripwire)
+      if (curr_rssMB > cpu_mem_tripwire)
         {
           log_memusage_msg(stderr, "killing Process %d for exceeding CPU memory limit: %d > %d\n",
                            log_memusage_impl_data.pid,
-                           curr_rssMB, mem_tripwire);
+                           curr_rssMB, cpu_mem_tripwire);
           pthread_kill(log_memusage_get_parent_thread_ID(), SIGUSR2);
           return NULL;
         }
@@ -295,8 +306,15 @@ void* log_memusage_execution_thread (void* ptr)
       if (ngpus > 0)
         {
           gpu_memory = log_memusage_get_each_gpu();
+          if (gpu_memory.max_used > gpu_mem_tripwire)
+            {
+              log_memusage_msg(stderr, "killing Process %d for exceeding GPU memory limit: %d > %d\n",
+                               log_memusage_impl_data.pid,
+                               gpu_memory.max_used, gpu_mem_tripwire);
+              pthread_kill(log_memusage_get_parent_thread_ID(), SIGUSR2);
+              return NULL;
+            }
         }
-
 
       /* only bother with any I/O if the log file has been opened */
       if (NULL != log_memusage_impl_data.fptr)
@@ -304,6 +322,7 @@ void* log_memusage_execution_thread (void* ptr)
           /* Do we want to log this step? */
           bool print_step = false;
           print_step = print_step || (curr_rssMB != last_rssMB);
+          print_step = print_step || (last_maxGPU_MB != gpu_memory.max_used);
           print_step = print_step || (step % log_memusage_impl_data.output_step_cnt == 0);
 
           if (print_step)
@@ -314,25 +333,27 @@ void* log_memusage_execution_thread (void* ptr)
                             (current_time.tv_usec - log_memusage_impl_data.start_time.tv_usec));
               elapsed = elapsed_us / 1000000.;
 
-              /* acquire a mutex lock to protect log_memusage_impl_data.fptr, log_memusage_impl_data.sizes */
+              /* acquire a mutex lock to protect log_memusage_impl_data.fptr, log_memusage_impl_data.sizes, etc.. */
               pthread_mutex_lock(&log_memusage_impl_data.mutex);
+
+              if (gpu_memory.max_used > log_memusage_impl_data.maxGPU_MB)
+                log_memusage_impl_data.maxGPU_MB = gpu_memory.max_used;
 
               ierr = log_memusage_parse_smaps(/* verbose = */ 0);
 
               /* fprintf(log_memusage_impl_data.fptr, "%g, %d, %d, %d\n", */
               /*         elapsed, */
-              /*         log_memusage_impl_data.sizes.Referenced / 1024, */
-              /*         log_memusage_impl_data.sizes.Rss / 1024, */
-              /*         log_memusage_impl_data.sizes.Pss / 1024); */
+              /*         log_memusage_impl_data.sizes.Referenced / LOG_MEMUSAGE_OS_RSUSAGE_TO_MB , */
+              /*         log_memusage_impl_data.sizes.Rss / LOG_MEMUSAGE_OS_RSUSAGE_TO_MB , */
+              /*         log_memusage_impl_data.sizes.Pss / LOG_MEMUSAGE_OS_RSUSAGE_TO_MB ); */
 
               fprintf(log_memusage_impl_data.fptr, "%g, %d",
                       elapsed,
-                      log_memusage_impl_data.sizes.Rss / 1024);
+                      log_memusage_impl_data.sizes.Rss / LOG_MEMUSAGE_OS_RSUSAGE_TO_MB );
               for (gpu=0; gpu<ngpus; gpu++)
                 fprintf(log_memusage_impl_data.fptr, ", %d",
                         gpu_memory.used[gpu]);
               fprintf(log_memusage_impl_data.fptr, "\n");
-
 
               pthread_mutex_unlock(&log_memusage_impl_data.mutex);
               /* done mutex */
@@ -386,7 +407,7 @@ int log_memusage_resume ()
 
 
 __attribute__ ((visibility ("hidden")))
- pthread_t log_memusage_get_parent_thread_ID()
+ pthread_t log_memusage_get_parent_thread_ID ()
 {
   static pthread_t parent_thread_ID;
   static bool firstcall = true;
@@ -437,7 +458,6 @@ __attribute__((constructor (/* priority = */ 3000)))
 void log_memusage_initialize ()
 {
   /* printf("..(constructor)... %s, line: %d\n", __FILE__, __LINE__); */
-
   int v = 0;
   char rank_env_vars[][64] = { "MPI_RANK",
                                "MP_CHILD",
@@ -447,7 +467,7 @@ void log_memusage_initialize ()
                                "MV2_COMM_WORLD_RANK",
                                "SLURM_PROCID" };
 
-  const int nrank_env_vars = sizeof rank_env_vars/64;
+  const int nrank_env_vars = (sizeof rank_env_vars/ sizeof rank_env_vars[0]);
 
   double polling_interval_sec = 0., output_interval_sec = 0.;
   int output_interval_step = 0;
@@ -456,7 +476,6 @@ void log_memusage_initialize ()
   log_memusage_get_parent_thread_ID();
 
   log_memusage_register_signal_handler();
-
 
   /*
    * Initialize Data Structures.
@@ -487,25 +506,8 @@ void log_memusage_initialize ()
 
   /* build up the output file name, depending on what info we have */
   {
-    char *fname, *basename, *suffix;
-    /*
-      fname = getenv("LOG_MEMUSAGE_LOGFILE_NAME");
-      basename = fname;
-      printf("%s\n", fname);
-      suffix = strchr(fname, '.');
-
-      if (suffix)
-        {
-          printf ("%s\n", suffix);
-          basename = log_memusage_strremove(basename, suffix);
-
-          printf ("%s\n", suffix);
-        }
-      printf ("%s\n", basename);
-    */
-
     sprintf(log_memusage_impl_data.filename, "%s", getenv("LOG_MEMUSAGE_LOGFILE_NAME"));
-    if (log_memusage_impl_data.rank != LOG_MEMUSAGE_INVALID_RANK)
+    if (LOG_MEMUSAGE_INVALID_RANK != log_memusage_impl_data.rank)
       sprintf(log_memusage_impl_data.filename, "%s-rank_%d",
               getenv("LOG_MEMUSAGE_LOGFILE_NAME"),
               log_memusage_impl_data.rank);
