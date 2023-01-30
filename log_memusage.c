@@ -158,16 +158,16 @@ int log_memusage_parse_smaps(int verbose)
   if (verbose)
     {
       printf("KernelPageSize %d\n", log_memusage_impl_data.sizes.KernelPageSize);
-      printf("MMUPageSize %d\n", log_memusage_impl_data.sizes.MMUPageSize);
-      printf("Private_Clean %d\n", log_memusage_impl_data.sizes.Private_Clean);
-      printf("Private_Dirty %d\n", log_memusage_impl_data.sizes.Private_Dirty);
-      printf("Pss %d\n", log_memusage_impl_data.sizes.Pss);
-      printf("Referenced %d\n", log_memusage_impl_data.sizes.Referenced);
-      printf("Rss %d\n", log_memusage_impl_data.sizes.Rss);
-      printf("Shared_Clean %d\n", log_memusage_impl_data.sizes.Shared_Clean);
-      printf("Shared_Dirty %d\n", log_memusage_impl_data.sizes.Shared_Dirty);
-      printf("Size %d\n", log_memusage_impl_data.sizes.Size);
-      printf("Swap %d\n", log_memusage_impl_data.sizes.Swap);
+      printf("MMUPageSize %d\n",    log_memusage_impl_data.sizes.MMUPageSize);
+      printf("Private_Clean %d\n",  log_memusage_impl_data.sizes.Private_Clean);
+      printf("Private_Dirty %d\n",  log_memusage_impl_data.sizes.Private_Dirty);
+      printf("Pss %d\n",            log_memusage_impl_data.sizes.Pss);
+      printf("Referenced %d\n",     log_memusage_impl_data.sizes.Referenced);
+      printf("Rss %d\n",            log_memusage_impl_data.sizes.Rss);
+      printf("Shared_Clean %d\n",   log_memusage_impl_data.sizes.Shared_Clean);
+      printf("Shared_Dirty %d\n",   log_memusage_impl_data.sizes.Shared_Dirty);
+      printf("Size %d\n",           log_memusage_impl_data.sizes.Size);
+      printf("Swap %d\n",           log_memusage_impl_data.sizes.Swap);
     }
 
   return 0;
@@ -406,7 +406,6 @@ __attribute__ ((constructor (/* priority = */ 1000)))
 void log_memusage_initialize_environment ()
 {
   char str[NAME_MAX];
-  char *fname, *basename, *suffix;
   extern char **environ;
   int i=0;
 
@@ -430,22 +429,6 @@ void log_memusage_initialize_environment ()
           log_memusage_msg(stderr, "(env) %s\n", environ[i]);
       i++;
     }
-
-  /*
-  fname = getenv("LOG_MEMUSAGE_LOGFILE_NAME");
-  basename = fname;
-  printf("%s\n", fname);
-  suffix = strchr(fname, '.');
-
-  if (suffix)
-    {
-      printf ("%s\n", suffix);
-      basename = log_memusage_strremove(basename, suffix);
-
-      printf ("%s\n", suffix);
-    }
-  printf ("%s\n", basename);
-  */
 }
 
 
@@ -504,10 +487,28 @@ void log_memusage_initialize ()
 
   /* build up the output file name, depending on what info we have */
   {
+    char *fname, *basename, *suffix;
+    /*
+      fname = getenv("LOG_MEMUSAGE_LOGFILE_NAME");
+      basename = fname;
+      printf("%s\n", fname);
+      suffix = strchr(fname, '.');
+
+      if (suffix)
+        {
+          printf ("%s\n", suffix);
+          basename = log_memusage_strremove(basename, suffix);
+
+          printf ("%s\n", suffix);
+        }
+      printf ("%s\n", basename);
+    */
+
+    sprintf(log_memusage_impl_data.filename, "%s", getenv("LOG_MEMUSAGE_LOGFILE_NAME"));
     if (log_memusage_impl_data.rank != LOG_MEMUSAGE_INVALID_RANK)
-      sprintf(log_memusage_impl_data.filename, "memory_usage-rank_%d.log", log_memusage_impl_data.rank);
-    else
-      sprintf(log_memusage_impl_data.filename, "memory_usage.log");
+      sprintf(log_memusage_impl_data.filename, "%s-rank_%d",
+              getenv("LOG_MEMUSAGE_LOGFILE_NAME"),
+              log_memusage_impl_data.rank);
   }
 
   /* set up the polling and output interval timing info */

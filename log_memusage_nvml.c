@@ -93,7 +93,7 @@ void log_memusage_initialize_nvml ()
   /* fluff below */
   if (verbose)
     {
-      log_memusage_msg(stderr, "Listing %u GPU device%s found:\n",
+      log_memusage_msg(stderr, "%u GPU device%s found:\n",
               log_memusage_impl_nvml_data.device_count,
               log_memusage_impl_nvml_data.device_count != 1 ? "s" : "");
 
@@ -121,13 +121,12 @@ void log_memusage_initialize_nvml ()
           if (NVML_SUCCESS != result)
             fprintf(stderr, "\nFailed to get memory info for device %u: %s\n", i, nvmlErrorString(result));
 
-          log_memusage_msg(stderr, "%u. %s [%s] mem: {used:%d free:%d total:%d} (MB)\n",
+          log_memusage_msg(stderr, "\t%u. %s [%s] mem: {used:%d free:%d total:%d} (MB)\n",
                            i, name, pci.busId,
                            (int) (meminfo.used  / 1024 / 1024),
                            (int) (meminfo.free  / 1024 / 1024),
                            (int) (meminfo.total / 1024 / 1024));
         }
-      printf("sizeof( log_memusage_impl_nvml_data) = %lu\n",  sizeof log_memusage_impl_nvml_data);
     }
 
   const log_memusage_gpu_memory_t gpu_memory = log_memusage_get_each_gpu();
