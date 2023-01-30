@@ -17,10 +17,11 @@ AM_SILENT_RULES(yes) dnl # use silent rules - automake 1.11
 # Checks for programs.
 AC_PROG_CXX
 AC_PROG_CC
-AC_PROG_FC
 
+AC_PROG_FC
 AC_FC_LIBRARY_LDFLAGS
 AC_FC_WRAPPERS
+
 AM_PROG_CC_C_O # mpl_examples/Makefile.am:74: warning: compiling ... in subdir requires 'AM_PROG_CC_C_O'
 
 AC_LANG([C])
@@ -34,6 +35,17 @@ AC_PATH_PROG([PKG_CONFIG], [pkg-config], [no])
 AX_PTHREAD
 
 # options
+AC_ARG_ENABLE(fortran,
+              [  --enable-fortran     Build Fortran API.],
+              [enable_fortran=$enableval],
+              [enable_fortran="yes"])
+if test "x$enable_fortran" = "xyes"; then
+    AC_DEFINE([ENABLE_FORTRAN], [1], [Build Fortran API.])
+    AC_MSG_RESULT([<<< Enabling Fortran API >>>])
+fi
+
+
+
 AC_OPENMP
 openmp_ok=no
 enable_openmp=no
@@ -60,7 +72,7 @@ if test "x$enable_nvml" = "xyes"; then
     AC_MSG_RESULT([<<< Enabling Nvidia NVML GPU support. >>>])
   fi
 fi
-
+AM_CONDITIONAL([NVML_BUILD], [test x"$enable_nvml" = xyes])
 
 
 AC_ARG_ENABLE(mpi,

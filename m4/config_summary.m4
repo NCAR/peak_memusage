@@ -23,11 +23,11 @@ echo
 echo Package version............... : $PACKAGE-$VERSION
 echo
 echo C++ compiler.................. : $CXX
-echo CXXFLAGS.......................: $CXXFLAGS
+echo CXXFLAGS...................... : $CXXFLAGS
 echo C compiler.................... : $CC
-echo CFLAGS.........................: $CFLAGS
+echo CFLAGS........................ : $CFLAGS
 echo Fortran compiler.............. : $FC
-echo FCFLAGS........................: $FCFLAGS
+echo FCFLAGS....................... : $FCFLAGS
 echo Install dir................... : $prefix
 #echo Python install dir............ : $pythondir
 #echo PYTHONPATH.................... : $PYTHONPATH
@@ -35,12 +35,13 @@ echo Build user.................... : $USER
 
 ######################################################################################
 echo
-echo Required Dependencies:
+echo 'Required Dependencies:'
 echo '   Pthreads................... : (required)'
 echo '      PTHREAD_CC.............. :' ${PTHREAD_CC}
 echo '      PTHREAD_CFLAGS.......... :' ${PTHREAD_CFLAGS}
 echo '      PTHREAD_LIBS............ :' ${PTHREAD_LIBS}
-echo Optional Dependencies:
+echo 'Optional Features & Dependencies:'
+echo '   Fortran API................ :' ${enable_fortran}
 echo '   NVML....................... :' ${enable_nvml}
 echo '   OpenMP..................... :' ${enable_openmp}
 echo '   MPI (test suite only)...... :' ${enable_mpi}
