@@ -1,5 +1,6 @@
 # this is NOT an automake makefile, it is a template
 # plain old GNU Makefile to be used outside the build system
+VPATH := @abs_top_srcdir@/examples
 
 CXX := @CXX@
 CC  := @CC@
