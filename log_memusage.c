@@ -424,7 +424,6 @@ __attribute__ ((visibility ("hidden")))
 
 
 __attribute__ ((visibility ("hidden")))
-__attribute__ ((constructor (/* priority = */ 1000)))
 void log_memusage_initialize_environment ()
 {
   char str[NAME_MAX];
@@ -455,7 +454,7 @@ void log_memusage_initialize_environment ()
 
 
 
-__attribute__((constructor (/* priority = */ 3000)))
+__attribute__((constructor))
 void log_memusage_initialize ()
 {
   /* printf("..(constructor)... %s, line: %d\n", __FILE__, __LINE__); */
@@ -472,6 +471,9 @@ void log_memusage_initialize ()
 
   double polling_interval_sec = 0., output_interval_sec = 0.;
   int output_interval_step = 0;
+
+  log_memusage_initialize_environment();
+  log_memusage_initialize_nvml();
 
   /* call this function from the main thread to register the parent thread ID inside for later use. */
   log_memusage_get_parent_thread_ID();
@@ -555,7 +557,7 @@ void log_memusage_initialize ()
 
 
 
-__attribute__((destructor (/* priority = */ 3000)))
+__attribute__((destructor))
 void log_memusage_finalize ()
 {
   /* printf("..(destructor)... %s, line: %d\n", __FILE__, __LINE__); */
@@ -569,6 +571,8 @@ void log_memusage_finalize ()
     }
 
   log_memusage_report(/* prefix = */ LOG_MEMUSAGE_LOGGING_PREFIX);
+
+  log_memusage_finalize_nvml();
 
   pthread_mutex_destroy(&log_memusage_impl_data.mutex);
 }

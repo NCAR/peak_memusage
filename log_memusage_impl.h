@@ -19,6 +19,8 @@ extern "C" {
   void log_memusage_signal_handler (int signum);
   void log_memusage_register_signal_handler ();
 
+  void log_memusage_initialize_nvml ();
+  void log_memusage_finalize_nvml ();
 
 #define LOG_MEMUSAGE_INVALID_RANK -1
 #define LOG_MEMUSAGE_LOGGING_PREFIX "# (memusage) --> "

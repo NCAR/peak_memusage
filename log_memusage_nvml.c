@@ -26,7 +26,8 @@ log_memusage_gpu_memory_t log_memusage_get_each_gpu ()
 
 int log_memusage_get_all_gpus () { return 0; }
 int log_memusage_get_max_gpu () { return 0; }
-
+void log_memusage_initialize_nvml () { return; }
+void log_memusage_finalize_nvml () { return; }
 
 #else
 #include <nvml.h>
@@ -59,7 +60,7 @@ int log_memusage_ngpus ()
 
 
 
-__attribute__ ((constructor (/* priority = */ 2000)))
+__attribute__ ((visibility ("hidden")))
 void log_memusage_initialize_nvml ()
 {
   /* printf("..(constructor)... %s, line: %d\n", __FILE__, __LINE__); */
@@ -190,7 +191,7 @@ int log_memusage_get_max_gpu ()
 
 
 
-__attribute__ ((destructor  (/* priority = */ 2000)))
+__attribute__ ((visibility ("hidden")))
 void log_memusage_finalize_nvml ()
 {
   nvmlReturn_t result;
