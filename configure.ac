@@ -60,7 +60,7 @@ if test "x$enable_nvml" = "xyes"; then
     AC_MSG_RESULT([<<< Enabling Nvidia NVML GPU support. >>>])
   fi
 fi
-
+AM_CONDITIONAL([NVML_BUILD], [test x"$enable_nvml" = xyes])
 
 
 AC_ARG_ENABLE(mpi,
