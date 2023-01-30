@@ -12,6 +12,7 @@ PKG_CONFIG_PATH := $(prefix)/lib/pkgconfig:$(PKG_CONFIG_PATH)
 
 CFLAGS := $(CFLAGS) $(shell PKG_CONFIG_PATH=$(PKG_CONFIG_PATH) $(PKG_CONFIG) log_memusage --cflags)
 LIBS   := $(LIBS) $(shell PKG_CONFIG_PATH=$(PKG_CONFIG_PATH) $(PKG_CONFIG) log_memusage --libs)
+LDLIBS := $(LIBS)
 
 echo:
 	@echo "CXX=$(CXX)"
