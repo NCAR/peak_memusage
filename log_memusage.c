@@ -588,6 +588,7 @@ void log_memusage_finalize ()
 
 
 
+#ifdef ENABLE_FORTRAN
 /* Fortran API Follows */
 void FC_FUNC_(log_memusage_annotate, LOG_MEMUSAGE_ANNOTATE) (const char* label)
 {
@@ -604,27 +605,21 @@ void FC_FUNC_(log_memusage_report, LOG_MEMUSAGE_REPORT) ()
 
 
 void FC_FUNC_(log_memusage_initialize, LOG_MEMUSAGE_INITIALIZE) ()
-{
-  log_memusage_initialize();
-}
+{ log_memusage_initialize(); }
 
 
 
 void FC_FUNC_(log_memusage_finalize, LOG_MEMUSAGE_FINALIZE) ()
-{
-  log_memusage_finalize();
-}
+{ log_memusage_finalize(); }
 
 
 
 void FC_FUNC_(log_memusage_pause, LOG_MEMUSAGE_PAUSE) ()
-{
-  log_memusage_pause();
-}
+{ log_memusage_pause(); }
 
 
 
 void FC_FUNC_(log_memusage_resume, LOG_MEMUSAGE_RESUME) ()
-{
-  log_memusage_resume();
-}
+{ log_memusage_resume(); }
+
+#endif /* #ifdef ENABLE_FORTRAN */
