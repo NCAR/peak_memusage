@@ -13,7 +13,7 @@
 #include <string>
 #include <vector>
 
-constexpr long long size = 500'000'000;
+constexpr long long size = 500000000;
 
 const double pi = std::acos(-1);
 
