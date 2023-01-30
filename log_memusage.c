@@ -118,6 +118,12 @@ char * log_memusage_strremove (char *str, const char *sub)
 __attribute__ ((visibility ("hidden")))
 int log_memusage_parse_smaps (int verbose)
 {
+#ifdef __APPLE__
+  memset(&log_memusage_impl_data.sizes, 0, sizeof log_memusage_impl_data.sizes);
+  log_memusage_impl_data.sizes.Rss = log_memusage_get() * LOG_MEMUSAGE_OS_RSUSAGE_TO_MB;
+  return 0;
+#else
+
   char line[BUFSIZ];
   FILE *file = fopen(log_memusage_impl_data.smapsname, "r");
 
@@ -172,6 +178,7 @@ int log_memusage_parse_smaps (int verbose)
     }
 
   return 0;
+#endif
 }
 
 
@@ -293,6 +300,8 @@ void* log_memusage_execution_thread (void* ptr)
       last_rssMB     = curr_rssMB;
       curr_rssMB     = log_memusage_get();
       last_maxGPU_MB = gpu_memory.max_used;
+
+      /* printf("curr_rssMB=%d\n", curr_rssMB); */
 
       if (curr_rssMB > cpu_mem_tripwire)
         {
