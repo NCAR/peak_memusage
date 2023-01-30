@@ -87,6 +87,12 @@ void log_memusage_initialize_nvml ()
       fprintf(stderr, "Failed to query device count: %s\n", nvmlErrorString(result));
       return;
     }
+  for (i = 0; i < log_memusage_impl_nvml_data.device_count; i++)
+    {
+      result = nvmlDeviceGetHandleByIndex(i, &log_memusage_impl_nvml_data.device[i]);
+      if (NVML_SUCCESS != result)
+        fprintf(stderr, "Failed to get handle for device %u: %s\n", i, nvmlErrorString(result));
+    }
 
   log_memusage_impl_nvml_data.nvml_initialized = true;
 
@@ -102,10 +108,6 @@ void log_memusage_initialize_nvml ()
           char name[NVML_DEVICE_NAME_BUFFER_SIZE];
           nvmlPciInfo_t pci;
           nvmlMemory_t meminfo;
-
-          result = nvmlDeviceGetHandleByIndex(i, &log_memusage_impl_nvml_data.device[i]);
-          if (NVML_SUCCESS != result)
-            fprintf(stderr, "Failed to get handle for device %u: %s\n", i, nvmlErrorString(result));
 
           result = nvmlDeviceGetName(log_memusage_impl_nvml_data.device[i], name, NVML_DEVICE_NAME_BUFFER_SIZE);
           if (NVML_SUCCESS != result)
@@ -128,8 +130,6 @@ void log_memusage_initialize_nvml ()
                            (int) (meminfo.total / 1024 / 1024));
         }
     }
-
-  const log_memusage_gpu_memory_t gpu_memory = log_memusage_get_each_gpu();
 
   return;
 }

@@ -306,6 +306,10 @@ void* log_memusage_execution_thread (void* ptr)
       if (ngpus > 0)
         {
           gpu_memory = log_memusage_get_each_gpu();
+
+          if (gpu_memory.max_used > log_memusage_impl_data.maxGPU_MB)
+            log_memusage_impl_data.maxGPU_MB = gpu_memory.max_used;
+
           if (gpu_memory.max_used > gpu_mem_tripwire)
             {
               log_memusage_msg(stderr, "killing Process %d for exceeding GPU memory limit: %d > %d\n",
@@ -335,9 +339,6 @@ void* log_memusage_execution_thread (void* ptr)
 
               /* acquire a mutex lock to protect log_memusage_impl_data.fptr, log_memusage_impl_data.sizes, etc.. */
               pthread_mutex_lock(&log_memusage_impl_data.mutex);
-
-              if (gpu_memory.max_used > log_memusage_impl_data.maxGPU_MB)
-                log_memusage_impl_data.maxGPU_MB = gpu_memory.max_used;
 
               ierr = log_memusage_parse_smaps(/* verbose = */ 0);
 
