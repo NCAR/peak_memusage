@@ -18,28 +18,29 @@ void printUsage(char **argv) {
 
 int main(int argc, char **argv) {
   struct rusage us, ous;	/* resource us struct */
-  char *runme, *space = " ", *extra = "; sleep 1";
+  char *runme=NULL, *space = " ", *extra = "; sleep 1";
   char hn[256];
   time_t start_time, stop_time;
-  int detailed = 0, /* error, */ exit_status, signal, rank=0 /*, poolsize*/;
+  int detailed = 0, /* error, */ exit_status, signal, rank=0, v=0 /*, poolsize*/;
+  char rank_env_vars[][64] = { "MPI_RANK",
+                               "MP_CHILD",
+                               "PMI_RANK",
+                               "PMIX_RANK",
+                               "OMPI_COMM_WORLD_RANK",
+                               "MV2_COMM_WORLD_RANK",
+                               "SLURM_PROCID" };
+
+  const int nrank_env_vars = (sizeof rank_env_vars/ sizeof rank_env_vars[0]);
 
   gethostname(hn, sizeof(hn) / sizeof(char));
 
-  // try some common env vars to learn rank:
-  if (NULL != getenv("MP_CHILD"))
-    rank = atoi(getenv("MP_CHILD"));
-
-  else if (NULL != getenv("PMI_RANK"))
-    rank = atoi(getenv("PMI_RANK"));
-
-  else if (NULL != getenv("PMIX_RANK"))
-    rank = atoi(getenv("PMIX_RANK"));
-
-  else if (NULL != getenv("OMPI_COMM_WORLD_RANK"))
-    rank = atoi(getenv("OMPI_COMM_WORLD_RANK"));
-
-  else if (NULL != getenv("SLURM_PROCID"))
-    rank = atoi(getenv("SLURM_PROCID"));
+  /* try some common env vars to learn rank: */
+  for (v=0; v<nrank_env_vars; ++v)
+    if (NULL != getenv(rank_env_vars[v]))
+      {
+        rank = atoi(getenv(rank_env_vars[v]));
+        break;
+      }
 
   if (argc > 1) {
     int current_arg = 1;
@@ -116,6 +117,8 @@ int main(int argc, char **argv) {
     }
 
   }
+
+  free(runme);
 
   return exit_status;
 }
