@@ -1,4 +1,4 @@
-PROJECT_NAME           = "Log Memusage"
+PROJECT_NAME           = "Log Memusage - Version @VERSION@"
 PROJECT_BRIEF          = "Logs memory usage history of an application."
 OUTPUT_DIRECTORY       = ./doc/doxygen
 ALWAYS_DETAILED_SEC    = YES

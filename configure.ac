@@ -29,6 +29,8 @@ LT_INIT
 AC_CONFIG_HEADERS([config.h])
 AC_CHECK_HEADERS_ONCE([sys/types.h stdio.h stdlib.h time.h string.h unistd.h sys/resource.h])
 
+AC_PATH_PROG([PKG_CONFIG], [pkg-config], [no])
+
 AX_PTHREAD
 
 # options
@@ -98,6 +100,7 @@ AC_CONFIG_FILES([
  Makefile
  mpi/Makefile
  doc/Doxyfile
+ examples/Makefile
  log_memusage.pc
 ])
 AC_OUTPUT

@@ -1,0 +1,25 @@
+# this is NOT an automake makefile, it is a template
+# plain old GNU Makefile to be used outside the build system
+
+CXX := @CXX@
+CC  := @CC@
+FC  := @FC@
+
+prefix := @prefix@
+
+PKG_CONFIG      := @PKG_CONFIG@
+PKG_CONFIG_PATH := $(prefix)/lib/pkgconfig:$(PKG_CONFIG_PATH)
+
+CFLAGS := $(CFLAGS) $(shell PKG_CONFIG_PATH=$(PKG_CONFIG_PATH) $(PKG_CONFIG) log_memusage --cflags)
+LIBS   := $(LIBS) $(shell PKG_CONFIG_PATH=$(PKG_CONFIG_PATH) $(PKG_CONFIG) log_memusage --libs)
+
+echo:
+	@echo "CXX=$(CXX)"
+	@echo "CC=$(CC)"
+	@echo "FC=$(FC)"
+	@echo
+	@echo "CFLAGS=$(CFLAGS)"
+	@echo "LIBS=$(LIBS)"
+	@echo
+	@echo "PKG_CONFIG=$(PKG_CONFIG)"
+	@echo "PKG_CONFIG_PATH=$(PKG_CONFIG_PATH)"
