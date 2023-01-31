@@ -7,7 +7,7 @@ AC_MSG_RESULT([-------- Configuring peak_memusage ----------])
 AC_MSG_RESULT([---------------------------------------------])
 
 AC_CONFIG_SRCDIR([peak_memusage.c])
-top_srcdir=`dirname $0`
+top_srcdir=$(dirname $0)
 AC_CONFIG_AUX_DIR([build-aux])
 AC_CONFIG_MACRO_DIR([m4])
 
@@ -65,14 +65,24 @@ AC_ARG_ENABLE(nvml,
               [enable_nvml="yes"])
 if test "x$enable_nvml" = "xyes"; then
   AC_PATH_PROG([NVIDIA_SMI], [nvidia-smi])
-  AC_CHECK_HEADER([nvml.h], [], [enable_nvml=no])
-  AC_CHECK_LIB([nvidia-ml], [nvmlInit],[], [enable_nvml=no])
+  AC_CHECK_LIB([nvidia-ml], [nvmlInit], [], [enable_nvml=no])
+  if test "x$enable_nvml" = "xyes"; then
+    AC_CHECK_HEADER([nvml.h], [nvml_label="(using external nvml.)"; found_nvml_h=yes], [found_nvml_h=no])
+    # If the library works, but we can't find the header, fall back to our
+    # ./contrib version
+    if test "x$found_nvml_h" = "xno"; then
+      unset ac_cv_header_nvml_h nvml_label
+      CPPFLAGS="${CPPFLAGS} -I${top_srcdir}/contrib/nvml/include"
+      AC_CHECK_HEADER([nvml.h], [nvml_label="(using nvml.h from ./contrib)"; internal_nvml_h=yes], [enable_nvml=no])
+    fi
+  fi
   if test "x$enable_nvml" = "xyes"; then
     AC_DEFINE([ENABLE_NVML], [1], [Build with NVML GPU support])
-    AC_MSG_RESULT([<<< Enabling Nvidia NVML GPU support. >>>])
+    AC_MSG_RESULT([<<< Enabling Nvidia NVML GPU support ${nvml_label}. >>>])
   fi
 fi
 AM_CONDITIONAL([NVML_BUILD], [test x"$enable_nvml" = xyes])
+
 
 
 AC_ARG_ENABLE(mpi,

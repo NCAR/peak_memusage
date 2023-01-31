@@ -22,10 +22,11 @@ echo '----------------------------------- SUMMARY ------------------------------
 echo
 echo Package version............... : $PACKAGE-$VERSION
 echo
-echo C++ compiler.................. : $CXX
-echo CXXFLAGS...................... : $CXXFLAGS
 echo C compiler.................... : $CC
 echo CFLAGS........................ : $CFLAGS
+echo CPPFLAGS...................... : $CPPFLAGS
+echo C++ compiler.................. : $CXX
+echo CXXFLAGS...................... : $CXXFLAGS
 echo Fortran compiler.............. : $FC
 echo FCFLAGS....................... : $FCFLAGS
 echo Install dir................... : $prefix
