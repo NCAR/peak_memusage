@@ -13,10 +13,11 @@ module list
 
 mpicxx -o hello_world_mpi_ssend_recv hello_world_mpi_ssend_recv.C -std=c++11 || exit 1
 
+mpiexec_mpt ./hello_world_mpi_ssend_recv
+
 export LOG_MEMUSAGE_VERBOSE=1
 export LOG_MEMUSAGE_ENABLE_LOGFILE=1
-mpiexec_mpt \
-    LD_PRELOAD=/glade/work/benkirk/peak_memusage/chey/install/lib/liblog_memusage.so \
-    ./ hello_world_mpi_ssend_recv
+export LD_PRELOAD=/glade/work/benkirk/peak_memusage/chey/install/lib/liblog_memusage.so
+mpiexec_mpt ./hello_world_mpi_ssend_recv
 
 echo && echo && echo "Done at $(date)"
