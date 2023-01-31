@@ -1,8 +1,8 @@
-.TH "/Users/benkirk/codes/peak_memusage/log_memusage.h" 3 "Mon Jan 30 2023" "Log Memusage - Version 3.0.0" \" -*- nroff -*-
+.TH "/glade/work/benkirk/peak_memusage/log_memusage.h" 3 "Tue Jan 31 2023" "Log Memusage - Version 3.0.0" \" -*- nroff -*-
 .ad l
 .nh
 .SH NAME
-/Users/benkirk/codes/peak_memusage/log_memusage.h
+/glade/work/benkirk/peak_memusage/log_memusage.h \- 
 .SH SYNOPSIS
 .br
 .PP
@@ -27,7 +27,9 @@
 
 .in +1c
 .ti -1c
-.RI "typedef struct \fBlog_memusage_gpu_memory\fP \fBlog_memusage_gpu_memory_t\fP"
+.RI "typedef struct 
+.br
+\fBlog_memusage_gpu_memory\fP \fBlog_memusage_gpu_memory_t\fP"
 .br
 .in -1c
 .SS "Functions"
@@ -72,101 +74,105 @@
 .SS "#define LOG_MEMUSAGE_MAX_GPU_DEVICES   8"
 Maximum number of GPUs supported on a single host\&. 
 .PP
-Definition at line \fB192\fP of file \fBlog_memusage\&.h\fP\&.
+Definition at line 188 of file log_memusage\&.h\&.
 .SS "#define LOG_MEMUSAGE_OS_RSUSAGE_TO_MB   (1024)"
 \fCgetrusage()\fP returns bytes on OSX, kbytes on Linux\&. Handle apropriately\&. 
 .PP
-Definition at line \fB201\fP of file \fBlog_memusage\&.h\fP\&.
+Definition at line 197 of file log_memusage\&.h\&.
 .SH "Typedef Documentation"
 .PP 
 .SS "typedef struct \fBlog_memusage_gpu_memory\fP \fBlog_memusage_gpu_memory_t\fP"
 Simple typedef for using \fC\fBlog_memusage_gpu_memory\fP\fP structs\&. 
 .PP
-Definition at line \fB238\fP of file \fBlog_memusage\&.h\fP\&.
+Definition at line 234 of file log_memusage\&.h\&.
 .SH "Function Documentation"
 .PP 
-.SS "int log_memusage_annotate (const char * annotation)"
+.SS "int log_memusage_annotate (const char *annotation)"
 Insert the specified \fCannotation\fP into the memory log file\&. This is useful for example to annotate what phase of the main program is executing at a given time\&. 
 .PP
-Definition at line \fB186\fP of file \fBlog_memusage\&.c\fP\&.
+Definition at line 186 of file log_memusage\&.c\&.
 .SS "void log_memusage_finalize ()"
 Terminates the memory logging execution thread\&. 
+.PP
+Definition at line 570 of file log_memusage\&.c\&.
 .SS "int log_memusage_get ()"
 Gets the amount of CPU memory used\&. 
 .PP
-\fBReturns\fP
+\fBReturns:\fP
 .RS 4
 The amount of CPU memory currently in use (MB)\&. 
 .RE
 .PP
 
 .PP
-Definition at line \fB222\fP of file \fBlog_memusage\&.c\fP\&.
+Definition at line 222 of file log_memusage\&.c\&.
 .SS "int log_memusage_get_all_gpus ()"
 
 .PP
-\fBReturns\fP
+\fBReturns:\fP
 .RS 4
 the total memory used on all of the \fCdevice_count\fP GPUs (MB)\&. 
 .RE
 .PP
 
 .PP
-Definition at line \fB27\fP of file \fBlog_memusage_nvml\&.c\fP\&.
+Definition at line 27 of file log_memusage_nvml\&.c\&.
 .SS "\fBlog_memusage_gpu_memory_t\fP log_memusage_get_each_gpu ()"
 
 .PP
-\fBReturns\fP
+\fBReturns:\fP
 .RS 4
 the latest memory information for all GPUs\&. 
 .RE
 .PP
 
 .PP
-Definition at line \fB20\fP of file \fBlog_memusage_nvml\&.c\fP\&.
+Definition at line 20 of file log_memusage_nvml\&.c\&.
 .SS "int log_memusage_get_max_gpu ()"
 
 .PP
-\fBReturns\fP
+\fBReturns:\fP
 .RS 4
 the maximum memory used on any of the \fCdevice_count\fP GPUs (MB)\&. 
 .RE
 .PP
 
 .PP
-Definition at line \fB28\fP of file \fBlog_memusage_nvml\&.c\fP\&.
+Definition at line 28 of file log_memusage_nvml\&.c\&.
 .SS "void log_memusage_initialize ()"
 Initializes the memory logging data structures and execution thread\&. 
+.PP
+Definition at line 467 of file log_memusage\&.c\&.
 .SS "int log_memusage_ngpus ()"
 
 .PP
-\fBReturns\fP
+\fBReturns:\fP
 .RS 4
 the number of GPUs active for this \fC\fBmain()\fP\fP application\&. 
 .RE
 .PP
 
 .PP
-Definition at line \fB18\fP of file \fBlog_memusage_nvml\&.c\fP\&.
+Definition at line 18 of file log_memusage_nvml\&.c\&.
 .SS "int log_memusage_pause ()"
 Pauses memory monitoring by termininaing the execution thread\&. 
 .PP
-Definition at line \fB383\fP of file \fBlog_memusage\&.c\fP\&.
-.SS "int log_memusage_report (const char * prefix)"
+Definition at line 383 of file log_memusage\&.c\&.
+.SS "int log_memusage_report (const char *prefix)"
 Prints the current memory usage status to \fCstderr\fP\&. 
 .PP
-\fBReturns\fP
+\fBReturns:\fP
 .RS 4
 The amount of CPU memory currently in use (MB)\&. 
 .RE
 .PP
 
 .PP
-Definition at line \fB237\fP of file \fBlog_memusage\&.c\fP\&.
+Definition at line 237 of file log_memusage\&.c\&.
 .SS "int log_memusage_resume ()"
 Resumes memory monitoring by restarting the execution thread\&. 
 .PP
-Definition at line \fB402\fP of file \fBlog_memusage\&.c\fP\&.
+Definition at line 402 of file log_memusage\&.c\&.
 .SH "Author"
 .PP 
 Generated automatically by Doxygen for Log Memusage - Version 3\&.0\&.0 from the source code\&.

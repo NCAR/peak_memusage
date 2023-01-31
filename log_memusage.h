@@ -12,8 +12,6 @@ extern "C" {
 
   /**
      \page peak_memusage
-     \p peak_memusage foo
-     \section peak_memusageNAME NAME
      \p peak_memusage - Determine the high-water mark memory usage of an application.
 
      \section peak_memusageSYNOPSIS SYNOPSIS
@@ -50,8 +48,6 @@ extern "C" {
 
   /**
      \page log_memusage log_memusage
-     \p log_memusage bar
-     \section log_memusageNAME NAME
      \p log_memusage - Logs memory usage history of an application.
 
      \section log_memusageSYNOPSIS SYNOPSIS
