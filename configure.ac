@@ -67,7 +67,7 @@ if test "x$enable_nvml" = "xyes"; then
   AC_PATH_PROG([NVIDIA_SMI], [nvidia-smi])
   AC_CHECK_LIB([nvidia-ml], [nvmlInit], [], [enable_nvml=no])
   if test "x$enable_nvml" = "xyes"; then
-    AC_CHECK_HEADER([nvml.h], [nvml_label="(using external nvml.)"; found_nvml_h=yes], [found_nvml_h=no])
+    AC_CHECK_HEADER([nvml.h], [nvml_label="(using external nvml.h)"; found_nvml_h=yes], [found_nvml_h=no])
     # If the library works, but we can't find the header, fall back to our
     # ./contrib version
     if test "x$found_nvml_h" = "xno"; then

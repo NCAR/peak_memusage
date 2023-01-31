@@ -80,6 +80,8 @@ int log_memusage_msg (FILE* f, const char* format, ...)
   if (firstcall)
     {
       verbose = (getenv("LOG_MEMUSAGE_VERBOSE") != NULL) ? atoi(getenv("LOG_MEMUSAGE_VERBOSE")) : 0;
+      if (log_memusage_impl_data.rank > 0)
+        verbose = 0;
       firstcall = false;
     }
 
@@ -92,24 +94,6 @@ int log_memusage_msg (FILE* f, const char* format, ...)
   va_end (args);
 
   return rval;
-}
-
-
-
-__attribute__ ((visibility ("hidden")))
-char * log_memusage_strremove (char *str, const char *sub)
-{
-  char *p, *q, *r;
-  if (*sub && (q = r = strstr(str, sub)) != NULL) {
-    size_t len = strlen(sub);
-    while ((r = strstr(p = r + len, sub)) != NULL) {
-      while (p < r)
-        *q++ = *p++;
-    }
-    while ((*q++ = *p++) != '\0')
-      continue;
-  }
-  return str;
 }
 
 
@@ -481,6 +465,15 @@ void log_memusage_initialize ()
   double polling_interval_sec = 0., output_interval_sec = 0.;
   int output_interval_step = 0;
 
+  /* see if we can learn our MPI rank from the environment, before anything else... */
+  log_memusage_impl_data.rank = LOG_MEMUSAGE_INVALID_RANK;
+  for (v=0; v<nrank_env_vars; ++v)
+    if (NULL != getenv(rank_env_vars[v]))
+      {
+        log_memusage_impl_data.rank = atoi(getenv(rank_env_vars[v]));
+        break;
+      }
+
   log_memusage_initialize_environment();
   log_memusage_initialize_nvml();
 
@@ -494,7 +487,6 @@ void log_memusage_initialize ()
    */
   gethostname(log_memusage_impl_data.hostname, sizeof(log_memusage_impl_data.hostname) / sizeof(char));
   log_memusage_impl_data.pid = getpid();
-  log_memusage_impl_data.rank = LOG_MEMUSAGE_INVALID_RANK;
 
   /* where do we get our usage data?*/
   /* /proc/<PID>/smaps_rollup is preferred... */
@@ -507,14 +499,6 @@ void log_memusage_initialize ()
       if (access(log_memusage_impl_data.smapsname, R_OK) != 0)
         log_memusage_msg(stderr, "Cannot locate /proc/%d/smap_rollup or /proc/%d/smaps file!!\n", log_memusage_impl_data.pid, log_memusage_impl_data.pid);
     }
-
-  /* try some common env vars to learn rank: */
-  for (v=0; v<nrank_env_vars; ++v)
-    if (NULL != getenv(rank_env_vars[v]))
-      {
-        log_memusage_impl_data.rank = atoi(getenv(rank_env_vars[v]));
-        break;
-      }
 
   /* build up the output file name, depending on what info we have */
   {

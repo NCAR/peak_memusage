@@ -78,8 +78,7 @@ void log_memusage_signal_handler (int signum)
 __attribute__ ((visibility ("hidden")))
 void log_memusage_register_signal_handler ()
 {
-  const int verbose = (getenv("LOG_MEMUSAGE_VERBOSE")          != NULL) ? atoi(getenv("LOG_MEMUSAGE_VERBOSE")) : 0;
-  if (verbose) printf("# (memusage) --> Registering user-specified signal handlers\n");
+  log_memusage_msg(stderr, "Registering user-specified signal handlers.\n");
 
   /* signal(SIGINT,  log_memusage_signal_handler); */
   /* signal(SIGTERM, log_memusage_signal_handler); */
