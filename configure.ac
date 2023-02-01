@@ -6,7 +6,7 @@ AC_MSG_RESULT([---------------------------------------------])
 AC_MSG_RESULT([-------- Configuring peak_memusage ----------])
 AC_MSG_RESULT([---------------------------------------------])
 
-AC_CONFIG_SRCDIR([peak_memusage.c])
+AC_CONFIG_SRCDIR([peak_memusage.cxx])
 top_srcdir=$(dirname $0)
 AC_CONFIG_AUX_DIR([build-aux])
 AC_CONFIG_MACRO_DIR([m4])

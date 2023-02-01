@@ -17,7 +17,7 @@ BUILT_SOURCES =
 # programs & libraries
 #----------------------------------------------------------
 bin_PROGRAMS += peak_memusage
-peak_memusage_SOURCES = peak_memusage.c
+peak_memusage_SOURCES = peak_memusage.cxx
 
 lib_LTLIBRARIES += liblog_memusage.la
 liblog_memusage_la_SOURCES = log_memusage.c log_memusage.h \
