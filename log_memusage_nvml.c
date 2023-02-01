@@ -49,7 +49,12 @@ static struct log_memusage_nvml_data_str
 } log_memusage_impl_nvml_data;
 
 
-
+/**
+ * \private
+ * In order to support runtime existance (or not) of libnvidia-ml.so,
+ * we do not link with it. Instead we will attempt to load with dlopen(),
+ * and access the desired functions through dlsym() lookup.
+ */
 void *nvml_dl_handle __attribute__ ((visibility ("hidden")));
 nvmlReturn_t (*dl_nvmlInit) () __attribute__ ((visibility ("hidden")));
 nvmlReturn_t (*dl_nvmlDeviceGetHandleByIndex) ( unsigned int  index, nvmlDevice_t* device ) __attribute__ ((visibility ("hidden")));
@@ -64,7 +69,7 @@ nvmlReturn_t (*dl_nvmlDeviceGetPciInfo) ( nvmlDevice_t device, nvmlPciInfo_t* pc
 
 int log_memusage_ngpus ()
 {
-  if ( ! log_memusage_impl_nvml_data.nvml_initialized )
+  if (!log_memusage_impl_nvml_data.nvml_initialized)
     return 0;
 
   return log_memusage_impl_nvml_data.device_count;
@@ -76,46 +81,50 @@ int log_memusage_ngpus ()
 __attribute__ ((visibility ("hidden")))
 void log_memusage_initialize_nvml ()
 {
-  /* printf("..(constructor)... %s, line: %d\n", __FILE__, __LINE__); */
-
   const int verbose = (getenv("LOG_MEMUSAGE_VERBOSE") != NULL) ? atoi(getenv("LOG_MEMUSAGE_VERBOSE")) : 0;
 
   int i =0;
   nvmlReturn_t result;
 
-  nvml_dl_handle = dlopen ("libnvidia-ml.so", RTLD_LAZY);
+  /* run-time detection of libnvidia-ml.so */
+  {
+    nvml_dl_handle = dlopen ("libnvidia-ml.so", RTLD_LAZY);
 
-  if (NULL == nvml_dl_handle)
-    {
-      fputs (dlerror(), stderr);
+    if (NULL == nvml_dl_handle)
+      {
+        /* fputs (dlerror(), stderr); */
 
-      dl_nvmlInit                   = NULL;
-      dl_nvmlDeviceGetHandleByIndex = NULL;
-      dl_nvmlDeviceGetMemoryInfo    = NULL;
-      dl_nvmlShutdown               = NULL;
-      dl_nvmlErrorString            = NULL;
-      dl_nvmlDeviceGetName          = NULL;
-      dl_nvmlDeviceGetCount         = NULL;
-      dl_nvmlDeviceGetPciInfo       = NULL;
+        log_memusage_msg(stderr, "Failed to load libnvidia-ml.so, skipping NVML API\n");
 
-      log_memusage_impl_nvml_data.nvml_initialized = true;
-      log_memusage_impl_nvml_data.device_count = 0;
+        dl_nvmlInit                   = NULL;
+        dl_nvmlDeviceGetHandleByIndex = NULL;
+        dl_nvmlDeviceGetMemoryInfo    = NULL;
+        dl_nvmlShutdown               = NULL;
+        dl_nvmlErrorString            = NULL;
+        dl_nvmlDeviceGetName          = NULL;
+        dl_nvmlDeviceGetCount         = NULL;
+        dl_nvmlDeviceGetPciInfo       = NULL;
 
-      return;
-    }
+        log_memusage_impl_nvml_data.nvml_initialized = true;
+        log_memusage_impl_nvml_data.device_count = 0;
 
-  dl_nvmlInit                   = dlsym(nvml_dl_handle, "nvmlInit");
-  dl_nvmlDeviceGetHandleByIndex = dlsym(nvml_dl_handle, "nvmlDeviceGetHandleByIndex");
-  dl_nvmlDeviceGetMemoryInfo    = dlsym(nvml_dl_handle, "nvmlDeviceGetMemoryInfo");
-  dl_nvmlShutdown               = dlsym(nvml_dl_handle, "nvmlShutdown");
-  dl_nvmlErrorString            = dlsym(nvml_dl_handle, "nvmlErrorString");
-  dl_nvmlDeviceGetName          = dlsym(nvml_dl_handle, "nvmlDeviceGetName");
-  dl_nvmlDeviceGetCount         = dlsym(nvml_dl_handle, "nvmlDeviceGetCount");
-  dl_nvmlDeviceGetPciInfo       = dlsym(nvml_dl_handle, "nvmlDeviceGetPciInfo");
+        return;
+      }
+
+    dl_nvmlInit                   = dlsym(nvml_dl_handle, "nvmlInit");
+    dl_nvmlDeviceGetHandleByIndex = dlsym(nvml_dl_handle, "nvmlDeviceGetHandleByIndex");
+    dl_nvmlDeviceGetMemoryInfo    = dlsym(nvml_dl_handle, "nvmlDeviceGetMemoryInfo");
+    dl_nvmlShutdown               = dlsym(nvml_dl_handle, "nvmlShutdown");
+    dl_nvmlErrorString            = dlsym(nvml_dl_handle, "nvmlErrorString");
+    dl_nvmlDeviceGetName          = dlsym(nvml_dl_handle, "nvmlDeviceGetName");
+    dl_nvmlDeviceGetCount         = dlsym(nvml_dl_handle, "nvmlDeviceGetCount");
+    dl_nvmlDeviceGetPciInfo       = dlsym(nvml_dl_handle, "nvmlDeviceGetPciInfo");
+  }
 
   log_memusage_impl_nvml_data.nvml_initialized = false;
   log_memusage_impl_nvml_data.device_count = 0;
 
+  /* OK, now the NVML api is ready... */
   result = dl_nvmlInit();
   if (NVML_SUCCESS != result)
     {
@@ -125,15 +134,16 @@ void log_memusage_initialize_nvml ()
       return;
     }
 
-  result = dl_nvmlDeviceGetCount(&log_memusage_impl_nvml_data.device_count);
+  result = dl_nvmlDeviceGetCount (&log_memusage_impl_nvml_data.device_count);
   if (NVML_SUCCESS != result)
     {
       fprintf(stderr, "Failed to query device count: %s\n", dl_nvmlErrorString(result));
       return;
     }
+
   for (i = 0; i < log_memusage_impl_nvml_data.device_count; i++)
     {
-      result = dl_nvmlDeviceGetHandleByIndex(i, &log_memusage_impl_nvml_data.device[i]);
+      result = dl_nvmlDeviceGetHandleByIndex (i, &log_memusage_impl_nvml_data.device[i]);
       if (NVML_SUCCESS != result)
         fprintf(stderr, "Failed to get handle for device %u: %s\n", i, dl_nvmlErrorString(result));
     }
@@ -143,9 +153,9 @@ void log_memusage_initialize_nvml ()
   /* fluff below */
   if (verbose)
     {
-      log_memusage_msg(stderr, "%u GPU device%s found:\n",
-                       log_memusage_impl_nvml_data.device_count,
-                       log_memusage_impl_nvml_data.device_count != 1 ? "s" : "");
+      log_memusage_msg (stderr, "%u GPU device%s found:\n",
+                        log_memusage_impl_nvml_data.device_count,
+                        log_memusage_impl_nvml_data.device_count != 1 ? "s" : "");
 
       for (i = 0; i < log_memusage_impl_nvml_data.device_count; i++)
         {
@@ -153,13 +163,13 @@ void log_memusage_initialize_nvml ()
           nvmlPciInfo_t pci;
           nvmlMemory_t meminfo;
 
-          result = dl_nvmlDeviceGetName(log_memusage_impl_nvml_data.device[i], name, NVML_DEVICE_NAME_BUFFER_SIZE);
+          result = dl_nvmlDeviceGetName (log_memusage_impl_nvml_data.device[i], name, NVML_DEVICE_NAME_BUFFER_SIZE);
           if (NVML_SUCCESS != result)
             fprintf(stderr, "Failed to get name of device %u: %s\n", i, dl_nvmlErrorString(result));
 
           /* pci.busId is very useful to know which device physically you're talking to */
           /* Using PCI identifier you can also match nvmlDevice handle to CUDA device. */
-          result = dl_nvmlDeviceGetPciInfo(log_memusage_impl_nvml_data.device[i], &pci);
+          result = dl_nvmlDeviceGetPciInfo (log_memusage_impl_nvml_data.device[i], &pci);
           if (NVML_SUCCESS != result)
             fprintf(stderr, "Failed to get pci info for device %u: %s\n", i, dl_nvmlErrorString(result));
 
@@ -167,11 +177,11 @@ void log_memusage_initialize_nvml ()
           if (NVML_SUCCESS != result)
             fprintf(stderr, "\nFailed to get memory info for device %u: %s\n", i, dl_nvmlErrorString(result));
 
-          log_memusage_msg(stderr, "\t%u. %s [%s] mem: {used:%d free:%d total:%d} (MB)\n",
-                           i, name, pci.busId,
-                           (int) (meminfo.used  / 1024 / 1024),
-                           (int) (meminfo.free  / 1024 / 1024),
-                           (int) (meminfo.total / 1024 / 1024));
+          log_memusage_msg (stderr, "\t%u. %s [%s] mem: {used:%d free:%d total:%d} (MB)\n",
+                            i, name, pci.busId,
+                            (int) (meminfo.used  / 1024 / 1024),
+                            (int) (meminfo.free  / 1024 / 1024),
+                            (int) (meminfo.total / 1024 / 1024));
         }
     }
 

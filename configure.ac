@@ -25,7 +25,12 @@ AC_FC_WRAPPERS
 AM_PROG_CC_C_O # mpl_examples/Makefile.am:74: warning: compiling ... in subdir requires 'AM_PROG_CC_C_O'
 
 AC_LANG([C])
-LT_INIT
+
+#-----------------------------------------------------
+# Initialize libtool.  By default, we will build
+# only shared libraries on platforms that support them
+#-----------------------------------------------------
+LT_INIT([disable-static])
 
 AC_CONFIG_HEADERS([config.h])
 AC_CHECK_HEADERS_ONCE([sys/types.h stdio.h stdlib.h time.h string.h unistd.h sys/resource.h])

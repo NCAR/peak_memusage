@@ -29,6 +29,9 @@ echo C++ compiler.................. : $CXX
 echo CXXFLAGS...................... : $CXXFLAGS
 echo Fortran compiler.............. : $FC
 echo FCFLAGS....................... : $FCFLAGS
+echo LIBS.......................... : $LIBS
+echo LDFLAGS....................... : $LDFLAGS
+echo
 echo Install dir................... : $prefix
 #echo Python install dir............ : $pythondir
 #echo PYTHONPATH.................... : $PYTHONPATH
