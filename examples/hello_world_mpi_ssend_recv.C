@@ -31,7 +31,8 @@ int main (int argc, char **argv)
 
   MPI_Barrier(MPI_COMM_WORLD);
 
-  std::size_t cnt=1e6;
+  const std::size_t cnt = (rank < 2) ? 2e7 : 1e6; // ranks 0,1 trade more data
+
   std::vector<int> buf(cnt);
 
   if (0 == rank%2) // even sends
@@ -84,6 +85,9 @@ int main (int argc, char **argv)
       MPI_Recv (&buf[0], buf.size(), MPI_INT, /* dest = */ rank-1, /* tag = */ 200, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
       MPI_Recv (&buf[0], buf.size(), MPI_INT, /* dest = */ rank-1, /* tag = */ 300, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
       MPI_Recv (&buf[0], buf.size(), MPI_INT, /* dest = */ rank-1, /* tag = */ 400, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+
+      int i=(rank-1);
+      std::for_each(buf.cbegin(), buf.cend(), [&i](const int &b) { assert(b == i++); });
 
       std::cout << "Rank " << rank << " recvs [";
       auto end = buf.begin();
