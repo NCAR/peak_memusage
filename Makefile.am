@@ -13,6 +13,8 @@ EXTRA_DIST =
 CLEANFILES =
 BUILT_SOURCES =
 
+
+
 #----------------------------------------------------------
 # programs & libraries
 #----------------------------------------------------------
@@ -27,6 +29,9 @@ liblog_memusage_la_CFLAGS = $(PTHREAD_CFLAGS)
 liblog_memusage_la_LIBADD = $(PTHREAD_LIBS)
 include_HEADERS += log_memusage.h
 
+lib_LTLIBRARIES += liblog_memusage_malloc.la
+liblog_memusage_malloc_la_SOURCES = log_memusage_malloc.c log_memusage.h
+
 bin_PROGRAMS += demo_log_memusage
 demo_log_memusage_SOURCES = demo_log_memusage.c
 demo_log_memusage_LDADD = liblog_memusage.la
@@ -34,6 +39,8 @@ demo_log_memusage_LDADD = liblog_memusage.la
 # Support for pkgconfig
 pkgconfigdir     = $(libdir)/pkgconfig
 pkgconfig_DATA   = log_memusage.pc
+
+
 
 #----------------------------------------------------------
 # docs
@@ -60,11 +67,14 @@ docstamp: Makefile $(liblog_memusage_la_SOURCES)
 	$(AM_V_GEN)touch $@
 
 BUILT_SOURCES += docstamp
+
 else
 
 man3_MANS = $(cached_mans)
 
 endif
+
+
 
 #----------------------------------------------------------
 # tests
@@ -92,6 +102,7 @@ if OPENMP_BUILD
   TESTS += tests/mpi_omp_threads.sh
 endif
 endif
+
 
 
 #----------------------------------------------------------

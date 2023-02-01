@@ -11,6 +11,9 @@ top_srcdir=$(dirname $0)
 AC_CONFIG_AUX_DIR([build-aux])
 AC_CONFIG_MACRO_DIR([m4])
 
+# Print configuration info to the header file
+AC_DEFINE_UNQUOTED(CONFIGURE_INFO, ["$0 $ac_configure_args"], [Configuration information.])
+
 AM_INIT_AUTOMAKE([dist-bzip2 tar-pax subdir-objects color-tests 1.11 foreign])
 AM_SILENT_RULES(yes) dnl # use silent rules - automake 1.11
 
@@ -33,11 +36,13 @@ AC_LANG([C])
 LT_INIT([disable-static])
 
 AC_CONFIG_HEADERS([config.h])
-AC_CHECK_HEADERS_ONCE([sys/types.h stdio.h stdlib.h time.h string.h unistd.h sys/resource.h])
+AC_CHECK_HEADERS_ONCE([sys/types.h stdio.h stdlib.h time.h string.h unistd.h sys/resource.h stdatomic.h dlfcn.h])
 
 AC_PATH_PROG([PKG_CONFIG], [pkg-config], [no])
 
+# pthreads & thread-local storage
 AX_PTHREAD
+AX_TLS
 
 # options
 AC_ARG_ENABLE(fortran,
