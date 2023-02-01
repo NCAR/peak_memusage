@@ -16,7 +16,6 @@
 #include <signal.h>
 #include <assert.h>
 #include <stdarg.h>
-#include <math.h>
 
 #include "log_memusage.h"
 #include "log_memusage_impl.h"
@@ -521,7 +520,7 @@ void log_memusage_initialize ()
     if (output_interval_sec < polling_interval_sec)
       output_interval_sec = polling_interval_sec;
 
-    output_interval_step = ceil( output_interval_sec / polling_interval_sec );
+    output_interval_step = (int) (output_interval_sec / polling_interval_sec);
     log_memusage_msg(stderr, "Using %d as output_interval_step\n", output_interval_step);
     log_memusage_impl_data.output_step_cnt = output_interval_step;
 
