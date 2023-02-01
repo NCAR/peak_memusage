@@ -25,9 +25,6 @@ liblog_memusage_la_SOURCES = log_memusage.c log_memusage.h \
 	                     log_memusage_nvml.c
 liblog_memusage_la_CFLAGS = $(PTHREAD_CFLAGS)
 liblog_memusage_la_LIBADD = $(PTHREAD_LIBS)
-if NVML_BUILD
-  liblog_memusage_la_LIBADD += -lnvidia-ml
-endif
 include_HEADERS += log_memusage.h
 
 bin_PROGRAMS += demo_log_memusage
