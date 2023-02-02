@@ -38,9 +38,27 @@ LT_INIT([disable-static])
 AC_CONFIG_HEADERS([config.h])
 AC_CHECK_HEADERS_ONCE([sys/types.h stdio.h stdlib.h time.h string.h unistd.h sys/resource.h stdatomic.h dlfcn.h])
 
+AC_MSG_CHECKING([for mallinfo2()])
+AC_LINK_IFELSE([AC_LANG_PROGRAM([#include <malloc.h>
+                                ],
+                                [struct mallinfo mi;
+                                 mi = mallinfo2();
+                                ])],
+               [AC_MSG_RESULT([yes]); AC_DEFINE([HAVE_MALLINFO2], [1], [Have malloc.h mallinfo2() interface.])],
+               [AC_MSG_RESULT([no])])
+AC_MSG_CHECKING([for mallinfo()])
+AC_LINK_IFELSE([AC_LANG_PROGRAM([#include <malloc.h>
+                                ],
+                                [struct mallinfo mi;
+                                 mi = mallinfo();
+                                ])],
+               [AC_MSG_RESULT([yes]); AC_DEFINE([HAVE_MALLINFO], [1], [Have malloc.h mallinfo() interface.])],
+               [AC_MSG_RESULT([no])])
+
 AC_PATH_PROG([PKG_CONFIG], [pkg-config], [no])
 
-# pthreads & thread-local storage
+# pthreads, atomics, & thread-local storage
+AC_CHECK_HEADER([stdatomic.h], [have_stdatomic_h=yes], [have_stdatomic_h=no])
 AX_PTHREAD
 AX_TLS
 

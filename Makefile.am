@@ -31,10 +31,11 @@ include_HEADERS += log_memusage.h
 
 lib_LTLIBRARIES += liblog_memusage_malloc.la
 liblog_memusage_malloc_la_SOURCES = log_memusage_malloc.c log_memusage.h
+#liblog_memusage_malloc_la_LIBADD  = liblog_memusage.la
 
 bin_PROGRAMS += demo_log_memusage
 demo_log_memusage_SOURCES = demo_log_memusage.c
-demo_log_memusage_LDADD = liblog_memusage.la
+demo_log_memusage_LDADD = liblog_memusage.la liblog_memusage_malloc.la
 
 # Support for pkgconfig
 pkgconfigdir     = $(libdir)/pkgconfig

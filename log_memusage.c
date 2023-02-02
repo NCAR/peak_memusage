@@ -464,6 +464,9 @@ void log_memusage_initialize ()
   double polling_interval_sec = 0., output_interval_sec = 0.;
   int output_interval_step = 0;
 
+  int* p = malloc(10);
+  free(p);
+
   /* see if we can learn our MPI rank from the environment, before anything else... */
   log_memusage_impl_data.rank = LOG_MEMUSAGE_INVALID_RANK;
   for (v=0; v<nrank_env_vars; ++v)

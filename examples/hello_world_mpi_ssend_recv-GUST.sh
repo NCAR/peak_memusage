@@ -11,21 +11,24 @@
 #module load nvhpc/22.5 >/dev/null 2>&1 || { echo "cannot find requested module!"; exit 1; }
 module list
 
+
+NP=6
+
 echo "compiling..."
 mpicxx -o hello_world_mpi_ssend_recv hello_world_mpi_ssend_recv.C -std=c++11 || exit 1
 
-mpiexec -n 12 ./hello_world_mpi_ssend_recv
+mpiexec -n ${NP} ./hello_world_mpi_ssend_recv
 
 export LOG_MEMUSAGE_VERBOSE=1
 export LOG_MEMUSAGE_ENABLE_LOGFILE=1
 export MPI_SHEPHERD=false
-mpiexec -n 12 \
+mpiexec -n ${NP} \
     -env LD_PRELOAD="/glade/work/benkirk/peak_memusage/gust/install/lib/liblog_memusage.so:" \
     ./hello_world_mpi_ssend_recv
 
 export LOG_MEMUSAGE_POLL_INTERVAL=0.02
 export LOG_MEMUSAGE_CPU_MEM_TRIPWIRE=250
-mpiexec -n 12 \
+mpiexec -n ${NP} \
     -env LD_PRELOAD="/glade/work/benkirk/peak_memusage/gust/install/lib/liblog_memusage.so:" \
     ./hello_world_mpi_ssend_recv
 
