@@ -10,34 +10,57 @@
 #include <stdatomic.h>
 #include <dlfcn.h>
 #include <stdbool.h>
-#include <malloc.h>
+#ifdef HAVE_MALLOC_H
+#  include <malloc.h>
+#elif HAVE_MALLOC_MALLOC_H
+#  include <malloc/malloc.h>
+#endif
 #include <pthread.h>
 
 #include "log_memusage.h"
 #include "log_memusage_impl.h"
 
 
+/* #if defined(HAVE_MALLINFO2) || defined(HAVE_MALLINFO) */
 
-struct mallinfo my_mallinfo ()
+/* struct mallinfo my_mallinfo () */
+/* { */
+/* #ifdef HAVE_MALLINFO2 */
+
+/*   return mallinfo2(); */
+
+/* #elif HAVE_MALLINFO */
+
+/*   return mallinfo(); */
+
+/* #else */
+/* #  error "No suitable mallinfo()!!" */
+/* #endif */
+/* } */
+/* #endif */
+
+
+
+size_t my_malloc_size (void *p)
 {
-#ifdef HAVE_MALLINFO2
+#ifdef HAVE_MALLOC_USABLE_SIZE
 
-  return mallinfo2();
+  return malloc_usable_size(p);
 
-#elif HAVE_MALLINFO
+#elif HAVE_MALLOC_SIZE
 
-  return mallinfo();
+  return malloc_size(p);
 
 #else
-#  error "No suitable mallinfo()!!"
+#  error "No suitable malloc_usable_size()!!"
 #endif
+  return 0;
 }
-
 
 
 static void* (*real_malloc) (size_t) = NULL;
 //static void* (*real_calloc) (size_t nitems, size_t size) = NULL;
-//static void  (*real_free)   (void*)  = NULL;
+static void  (*real_free)   (void*)  = NULL;
 
 
 static atomic_int_least64_t malloced_bytes=0, malloc_calls=0, calloc_calls=0, freed_bytes=0, free_calls=0, current_bytes=0, max_bytes=0;
@@ -45,25 +68,25 @@ static atomic_int_least64_t malloced_bytes=0, malloc_calls=0, calloc_calls=0, fr
 static pthread_mutex_t lock=PTHREAD_MUTEX_INITIALIZER;
 
 
-static void display_mallinfo(void)
-{
-  struct mallinfo mi;
+/* static void display_mallinfo(void) */
+/* { */
+/*   struct mallinfo mi; */
 
-  mi = my_mallinfo();
+/*   mi = my_mallinfo(); */
 
-  fprintf(stderr, "\n");
-  fprintf(stderr, "# of free chunks (ordblks):               %d\n", mi.ordblks);
-  fprintf(stderr, "# of free fastbin blocks (smblks):        %d\n", mi.smblks);
-  fprintf(stderr, "# of mapped regions (hblks):              %d\n", mi.hblks);
-  fprintf(stderr, "Bytes allocated by means other than mmap: %d\n", mi.arena);
-  fprintf(stderr, "Bytes in mapped regions (hblkhd):         %d\n", mi.hblkhd);
-  /* fprintf(stderr, "Max. total allocated space (usmblks):  %d\n", mi.usmblks); */
-  fprintf(stderr, "Free bytes held in fastbins (fsmblks):    %d\n", mi.fsmblks);
-  fprintf(stderr, "Total allocated space (uordblks):         %d\n", mi.uordblks);
-  fprintf(stderr, "Total free space (fordblks):              %d\n", mi.fordblks);
-  fprintf(stderr, "Topmost releasable block (keepcost):      %d\n", mi.keepcost);
-  fprintf(stderr, "\n");
-}
+/*   fprintf(stderr, "\n"); */
+/*   fprintf(stderr, "# of free chunks (ordblks):               %d\n", mi.ordblks); */
+/*   fprintf(stderr, "# of free fastbin blocks (smblks):        %d\n", mi.smblks); */
+/*   fprintf(stderr, "# of mapped regions (hblks):              %d\n", mi.hblks); */
+/*   fprintf(stderr, "Bytes allocated by means other than mmap: %d\n", mi.arena); */
+/*   fprintf(stderr, "Bytes in mapped regions (hblkhd):         %d\n", mi.hblkhd); */
+/*   /\* fprintf(stderr, "Max. total allocated space (usmblks):  %d\n", mi.usmblks); *\/ */
+/*   fprintf(stderr, "Free bytes held in fastbins (fsmblks):    %d\n", mi.fsmblks); */
+/*   fprintf(stderr, "Total allocated space (uordblks):         %d\n", mi.uordblks); */
+/*   fprintf(stderr, "Total free space (fordblks):              %d\n", mi.fordblks); */
+/*   fprintf(stderr, "Topmost releasable block (keepcost):      %d\n", mi.keepcost); */
+/*   fprintf(stderr, "\n"); */
+/* } */
 
 
 /* https://stackoverflow.com/questions/24509509/how-to-get-the-size-of-memory-pointed-by-a-pointer */
@@ -112,21 +135,20 @@ static void mtrace_init (void)
   /*     abort(); */
   /*   } */
 
-  /* real_free   = dlsym(RTLD_NEXT, "free"); */
+  real_free   = dlsym(RTLD_NEXT, "free");
 
-  /* if (NULL == real_free) */
-  /*   { */
-  /*     fprintf(stderr, "Error in `dlsym`: %s\n", dlerror()); */
-  /*     abort(); */
-  /*   } */
+  if (NULL == real_free)
+    {
+      fprintf(stderr, "Error in `dlsym`: %s\n", dlerror());
+      abort();
+    }
 }
 
 
 
 void *malloc (size_t size)
 {
-  struct mallinfo before, after;
-  size_t delta;
+  size_t alloced_size=0;
 
   pthread_mutex_lock(&lock);
 
@@ -135,37 +157,23 @@ void *malloc (size_t size)
       mtrace_init();
     }
 
-  before = my_mallinfo();
-
-  malloc_calls++;
-  malloced_bytes += size;
-  current_bytes = (before.uordblks + before.hblkhd);
 
   if (current_bytes > max_bytes) max_bytes = current_bytes;
 
-  /* union my2_size *ptr = NULL; */
-  /* ptr = real_malloc(sizeof *ptr + size); */
-  /* if (ptr) */
-  /*   { */
-  /*     ptr->size = size; */
-  /*     ptr++; */
-  /*   } */
 
   void *ptr = NULL;
   ptr = real_malloc(size);
-  after = my_mallinfo();
 
-  current_bytes = (after.uordblks + after.hblkhd);
+  alloced_size = my_malloc_size(ptr);
+
+  /* update atomics */
+  malloc_calls++;
+  malloced_bytes += alloced_size;
+  current_bytes  += alloced_size;
 
   if (current_bytes > max_bytes) max_bytes = current_bytes;
 
-  delta = (after.uordblks - before.uordblks) + (after.hblkhd - before.hblkhd);
-
-  //display_mallinfo();
-
-  //fprintf(stderr, "Requested %p size %ld, used space %ld, overhead %ld, total current=%ld (MB)\n", ptr, size, delta, delta - size, current_bytes/1024/1024);
-
-  //fprintf(stderr, "malloc(%ld) = %p\n", size, ptr);
+  //fprintf(stderr, "Requested %p size %ld, used space %ld, overhead %ld, total current=%ld (MB)\n", ptr, size, alloced_size, alloced_size - size, current_bytes/1024/1024);
 
   pthread_mutex_unlock(&lock);
 
@@ -206,26 +214,25 @@ void *malloc (size_t size)
 
 
 
-/* void free (void *buf) */
-/* { */
-/*   if (NULL == buf) return; */
+void free (void *buf)
+{
+  size_t freed_size=0;
 
-/*   if (NULL == real_free) */
-/*     mtrace_init(); */
+  if (NULL == buf) return;
 
-/*   //union my2_size *ptr = buf; */
-/*   //ptr--; */
+  if (NULL == real_free)
+    mtrace_init();
 
-/*   //freed_bytes   += ptr->size; */
-/*   //current_bytes -= ptr->size; */
-/*   free_calls++; */
+  freed_size = my_malloc_size(buf);
 
-/*   //fprintf(stderr, "free(%p)\n", ptr); */
-/*   //real_free(ptr); */
-/*   real_free(buf); */
+  /* update atomics */
+  free_calls++;
+  freed_bytes   += freed_size;
+  current_bytes -= freed_size;
 
-/*   //display_mallinfo(); */
-/* } */
+  //fprintf(stderr, "free(%p)\n", ptr);
+  real_free(buf);
+}
 
 
 
@@ -239,9 +246,10 @@ void *malloc (size_t size)
 
 void log_memusage_malloc_report (const char* prefix)
 {
-  fprintf(stderr, "%smalloc: %ld calls, %ld bytes\n", prefix, malloc_calls, malloced_bytes);
-  //fprintf(stderr, "%sfree:   %ld calls, %ld bytes\n", prefix, free_calls,   freed_bytes);
-  fprintf(stderr, "%smax allocated:   %ld (MB)\n",   prefix, max_bytes/1024/1024);
+  fprintf(stderr, "%smalloc: %lld calls, %lld bytes\n", prefix, malloc_calls, malloced_bytes);
+  fprintf(stderr, "%sfree:   %lld calls, %lld bytes\n", prefix, free_calls,   freed_bytes);
+  //fprintf(stderr, "%sremaining: %lld bytes\n", prefix, malloced_bytes - freed_bytes);
+  fprintf(stderr, "%smax allocated:   %lld (MB)\n",   prefix, max_bytes/1024/1024);
 }
 
 
