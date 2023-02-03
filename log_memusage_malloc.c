@@ -230,7 +230,7 @@ void free (void *buf)
   freed_bytes   += freed_size;
   current_bytes -= freed_size;
 
-  //fprintf(stderr, "free(%p)\n", ptr);
+  //fprintf(stderr, "free(%p), %d\n", buf, free_calls);
   real_free(buf);
 }
 

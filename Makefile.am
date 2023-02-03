@@ -35,7 +35,7 @@ liblog_memusage_malloc_la_SOURCES = log_memusage_malloc.c log_memusage.h
 
 bin_PROGRAMS += demo_log_memusage
 demo_log_memusage_SOURCES = demo_log_memusage.c
-demo_log_memusage_LDADD = liblog_memusage.la liblog_memusage_malloc.la
+demo_log_memusage_LDADD = liblog_memusage.la
 
 # Support for pkgconfig
 pkgconfigdir     = $(libdir)/pkgconfig
