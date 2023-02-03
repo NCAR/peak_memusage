@@ -15,7 +15,7 @@
 #elif HAVE_MALLOC_MALLOC_H
 #  include <malloc/malloc.h>
 #endif
-#include <pthread.h>
+//#include <pthread.h>
 
 #include "log_memusage.h"
 #include "log_memusage_impl.h"
@@ -65,7 +65,7 @@ static void  (*real_free)   (void*)  = NULL;
 
 static atomic_int_least64_t malloced_bytes=0, malloc_calls=0, calloc_calls=0, freed_bytes=0, free_calls=0, current_bytes=0, max_bytes=0;
 
-static pthread_mutex_t lock=PTHREAD_MUTEX_INITIALIZER;
+//static pthread_mutex_t lock=PTHREAD_MUTEX_INITIALIZER;
 
 
 /* static void display_mallinfo(void) */
@@ -150,7 +150,7 @@ void *malloc (size_t size)
 {
   size_t alloced_size=0;
 
-  pthread_mutex_lock(&lock);
+  //pthread_mutex_lock(&lock);
 
   if (NULL == real_malloc)
     {
@@ -175,7 +175,7 @@ void *malloc (size_t size)
 
   //fprintf(stderr, "Requested %p size %ld, used space %ld, overhead %ld, total current=%ld (MB)\n", ptr, size, alloced_size, alloced_size - size, current_bytes/1024/1024);
 
-  pthread_mutex_unlock(&lock);
+  //pthread_mutex_unlock(&lock);
 
   return ptr;
 }
@@ -246,10 +246,10 @@ void free (void *buf)
 
 void log_memusage_malloc_report (const char* prefix)
 {
-  fprintf(stderr, "%smalloc: %lld calls, %lld bytes\n", prefix, malloc_calls, malloced_bytes);
-  fprintf(stderr, "%sfree:   %lld calls, %lld bytes\n", prefix, free_calls,   freed_bytes);
+  fprintf(stderr, "%smalloc: %lld bytes, %lld calls\n", prefix, malloced_bytes, malloc_calls);
+  fprintf(stderr, "%sfree:   %lld bytes, %lld calls\n", prefix, freed_bytes,    free_calls);
   //fprintf(stderr, "%sremaining: %lld bytes\n", prefix, malloced_bytes - freed_bytes);
-  fprintf(stderr, "%smax allocated:   %lld (MB)\n",   prefix, max_bytes/1024/1024);
+  fprintf(stderr, "%shigh water allocation: %lld (MB)\n",   prefix, max_bytes/1024/1024);
 }
 
 
@@ -259,7 +259,7 @@ __attribute__ ((visibility ("hidden")))
 void initialize ()
 {
   //fprintf(stderr, "..(constructor)... %s, line: %d\n", __FILE__, __LINE__);
-  pthread_mutex_init(&lock, NULL);
+  //pthread_mutex_init(&lock, NULL);
   return;
 }
 
@@ -271,5 +271,5 @@ void finalize ()
 {
   //fprintf(stderr, "..(destructor)... %s, line: %d\n", __FILE__, __LINE__);
   log_memusage_malloc_report(/* prefix = */ LOG_MEMUSAGE_LOGGING_PREFIX);
-  pthread_mutex_destroy(&lock);
+  //pthread_mutex_destroy(&lock);
 }
