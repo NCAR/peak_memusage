@@ -216,12 +216,14 @@ void *malloc (size_t size)
 
 void free (void *buf)
 {
+  //abort();
   size_t freed_size=0;
-
-  if (NULL == buf) return;
 
   if (NULL == real_free)
     mtrace_init();
+
+  if (NULL == buf) return;
+
 
   freed_size = my_malloc_size(buf);
 
@@ -230,7 +232,7 @@ void free (void *buf)
   freed_bytes   += freed_size;
   current_bytes -= freed_size;
 
-  //fprintf(stderr, "free(%p), %d\n", buf, free_calls);
+  fprintf(stderr, "free(%p), %d\n", buf, free_calls);
   real_free(buf);
 }
 

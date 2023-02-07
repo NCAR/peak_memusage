@@ -55,6 +55,10 @@ if test "x${enable_mpi}" = "xyes"; then
   echo '      MPIEXEC................. :' ${MPIEXEC}
 fi
 echo '   pkg-config................. :' ${PKG_CONFIG}
+echo '   malloc overrides........... :' ${enable_malloc_override}
+if test "x${enable_malloc_override}" = "xyes"; then
+  echo '      wrap malloc/free........ :' ${malloc_override_wrap}
+fi
 echo '   Documentation.............. :' ${enable_doc}
 if test "x${enable_doc}" = "xyes"; then
   echo '      DOXYGEN................. :' ${DOXYGEN}

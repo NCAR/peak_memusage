@@ -25,17 +25,41 @@ lib_LTLIBRARIES += liblog_memusage.la
 liblog_memusage_la_SOURCES = log_memusage.c log_memusage.h \
                              log_memusage_impl.h log_memusage_tripwire.c \
 	                     log_memusage_nvml.c
+
 liblog_memusage_la_CFLAGS = $(PTHREAD_CFLAGS)
 liblog_memusage_la_LIBADD = $(PTHREAD_LIBS)
 include_HEADERS += log_memusage.h
 
-lib_LTLIBRARIES += liblog_memusage_malloc.la
-liblog_memusage_malloc_la_SOURCES = log_memusage_malloc.c log_memusage.h
-#liblog_memusage_malloc_la_LIBADD  = liblog_memusage.la
+if MALLOC_OVERRIDE
+  lib_LTLIBRARIES += liblog_memusage_malloc.la
+  liblog_memusage_malloc_la_SOURCES = log_memusage_malloc.c log_memusage.h \
+                                      log_memusage_impl.h
+if MALLOC_OVERRIDE_WRAP
+  lib_LTLIBRARIES += liblog_memusage_malloc_wrap.la
+  liblog_memusage_malloc_wrap_la_SOURCES = log_memusage_malloc_wrap.c log_memusage.h \
+                                           log_memusage_impl.h
+  liblog_memusage_malloc_wrap_la_LDFLAGS = $(LDFLAGS_WRAP_MALLOC)
+endif
+endif
 
 bin_PROGRAMS += demo_log_memusage
 demo_log_memusage_SOURCES = demo_log_memusage.c
 demo_log_memusage_LDADD = liblog_memusage.la
+
+if MALLOC_OVERRIDE_WRAP
+  bin_PROGRAMS += demo_log_memusage_wrap
+  demo_log_memusage_wrap_SOURCES = demo_log_memusage.c
+  demo_log_memusage_wrap_LDFLAGS = $(LDFLAGS_WRAP_MALLOC)
+demo_log_memusage_wrap_LDADD = liblog_memusage.la liblog_memusage_malloc_wrap.la
+
+  bin_PROGRAMS += use_memory_openmp_wrap
+  use_memory_openmp_wrap_CPPFLAGS = -DCOMPILE_OMP
+  use_memory_openmp_wrap_CFLAGS = $(OPENMP_CFLAGS)
+  use_memory_openmp_wrap_SOURCES = use_memory.c
+  use_memory_openmp_wrap_LDFLAGS = $(LDFLAGS_WRAP_MALLOC)
+  use_memory_openmp_wrap_LDADD = liblog_memusage_malloc_wrap.la
+
+endif
 
 # Support for pkgconfig
 pkgconfigdir     = $(libdir)/pkgconfig

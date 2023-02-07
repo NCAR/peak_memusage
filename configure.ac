@@ -33,7 +33,7 @@ AC_LANG([C])
 # Initialize libtool.  By default, we will build
 # only shared libraries on platforms that support them
 #-----------------------------------------------------
-LT_INIT([disable-static])
+LT_INIT([disable-static, dlopen])
 
 AC_CONFIG_HEADERS([config.h])
 AC_CHECK_HEADERS_ONCE([sys/types.h stdio.h stdlib.h time.h string.h unistd.h sys/resource.h stdatomic.h dlfcn.h malloc.h malloc/malloc.h])
@@ -42,12 +42,39 @@ AX_MALLOC_FEATURES
 
 AC_PATH_PROG([PKG_CONFIG], [pkg-config], [no])
 
-# pthreads, atomics, & thread-local storage
+
+
+#-----------------------------------------------------
+# required compiler features
+#-----------------------------------------------------
 AC_CHECK_HEADER([stdatomic.h], [have_stdatomic_h=yes], [have_stdatomic_h=no])
 AX_PTHREAD
 AX_TLS
 
-# options
+
+
+#-----------------------------------------------------
+# optional features
+#-----------------------------------------------------
+AC_ARG_ENABLE(malloc-override,
+              [  --enable-malloc-override     Wrap malloc/free/etc... when possible.],
+              [enable_malloc_override=$enableval],
+              [enable_malloc_override="no"])
+if test "x$enable_malloc_override" = "xyes"; then
+    AC_DEFINE([ENABLE_MALLOC_OVERRIDE], [1], [Wrap malloc/free/etc... when possible.])
+    if test "x$ld_wrap" = "xyes"; then
+      AC_DEFINE([ENABLE_MALLOC_OVERRIDE_WRAP], [1], [Wrap malloc/free/etc... via ld --wrap=malloc.])
+      malloc_override_wrap=yes
+    else
+      malloc_override_wrap=no
+    fi
+    AC_MSG_RESULT([<<< Wrapping malloc/free etc. >>>])
+fi
+AM_CONDITIONAL([MALLOC_OVERRIDE], [test x"$enable_malloc_override" = xyes])
+AM_CONDITIONAL([MALLOC_OVERRIDE_WRAP], [test x"$malloc_override_wrap" = xyes])
+
+
+
 AC_ARG_ENABLE(fortran,
               [  --enable-fortran     Build Fortran API.],
               [enable_fortran=$enableval],
