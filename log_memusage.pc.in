@@ -1,0 +1,30 @@
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+libdir=@libdir@
+includedir=@includedir@
+
+Name: log_memusage
+Description: The libMesh Finite Element Library
+URL: https://github.com/NCAR/peak_memusage
+Requires:
+Version: @VERSION@
+Libs: -Wl,-rpath,${libdir} -L${libdir} -llog_memusage @PTHREAD_LIBS@
+Libs.private:
+Cflags: -I${includedir} @PTHREAD_CFLAGS@
+
+# prefix=@prefix@
+# exec_prefix=@exec_prefix@
+# libdir=@libdir@
+# includedir=@includedir@
+# cxxflags_extra = @CXXFLAGS_OPT@
+
+# Name: libmesh
+# Description: The libMesh Finite Element Library
+# Requires: @libmesh_pkgconfig_requires@
+# Version: @VERSION@
+# Libs: -Wl,-rpath,${libdir} -L${libdir} -lmesh_opt -ltimpi_opt \
+#       @libmesh_installed_LIBS@ @libmesh_optional_LIBS@
+# Libs.private:
+# Cflags: @CPPFLAGS_OPT@ \
+#         -I${includedir} \
+# 	@libmesh_optional_INCLUDES@

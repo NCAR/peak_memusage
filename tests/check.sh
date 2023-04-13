@@ -1,5 +1,5 @@
 #!/bin/bash
 
-./peak_memusage.exe ./use_memory.exe || exit 1
+./peak_memusage ./use_memory || exit 1
 
 exit 0

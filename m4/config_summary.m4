@@ -22,13 +22,16 @@ echo '----------------------------------- SUMMARY ------------------------------
 echo
 echo Package version............... : $PACKAGE-$VERSION
 echo
-#echo C++ compiler.................. : $CXX
-#echo CXXFLAGS.......................: $CXXFLAGS
 echo C compiler.................... : $CC
-echo CFLAGS.........................: $CFLAGS
-#echo Fortran compiler.............. : $FC
-#echo Fortran 77 compiler........... : $F77
-#echo FCFLAGS........................: $FCFLAGS
+echo CFLAGS........................ : $CFLAGS
+echo CPPFLAGS...................... : $CPPFLAGS
+echo C++ compiler.................. : $CXX
+echo CXXFLAGS...................... : $CXXFLAGS
+echo Fortran compiler.............. : $FC
+echo FCFLAGS....................... : $FCFLAGS
+echo LIBS.......................... : $LIBS
+echo LDFLAGS....................... : $LDFLAGS
+echo
 echo Install dir................... : $prefix
 #echo Python install dir............ : $pythondir
 #echo PYTHONPATH.................... : $PYTHONPATH
@@ -36,10 +39,30 @@ echo Build user.................... : $USER
 
 ######################################################################################
 echo
-echo Optional Dependencies:
-echo '   'OpenMP:.................... : ${enable_openmp}
-echo '   'MPI:....................... : ${enable_mpi}
-echo
+echo 'Required Dependencies:'
+echo '   Pthreads................... : (required)'
+echo '      PTHREAD_CC.............. :' ${PTHREAD_CC}
+echo '      PTHREAD_CFLAGS.......... :' ${PTHREAD_CFLAGS}
+echo '      PTHREAD_LIBS............ :' ${PTHREAD_LIBS}
+echo 'Optional Features & Dependencies:'
+echo '   Fortran API................ :' ${enable_fortran}
+echo '   NVML....................... :' ${enable_nvml}
+echo '   OpenMP..................... :' ${enable_openmp}
+echo '   MPI (test suite only)...... :' ${enable_mpi}
+if test "x${enable_mpi}" = "xyes"; then
+  echo '      MPICC................... :' ${MPICC}
+  echo '      MPICXX.................. :' ${MPICXX}
+  echo '      MPIEXEC................. :' ${MPIEXEC}
+fi
+echo '   pkg-config................. :' ${PKG_CONFIG}
+echo '   malloc overrides........... :' ${enable_malloc_override}
+if test "x${enable_malloc_override}" = "xyes"; then
+  echo '      wrap malloc/free........ :' ${malloc_override_wrap}
+fi
+echo '   Documentation.............. :' ${enable_doc}
+if test "x${enable_doc}" = "xyes"; then
+  echo '      DOXYGEN................. :' ${DOXYGEN}
+fi
 echo '-------------------------------------------------------------------------------'
 
 echo
