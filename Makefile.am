@@ -50,7 +50,7 @@ if MALLOC_OVERRIDE_WRAP
   bin_PROGRAMS += demo_log_memusage_wrap
   demo_log_memusage_wrap_SOURCES = demo_log_memusage.c
   demo_log_memusage_wrap_LDFLAGS = $(LDFLAGS_WRAP_MALLOC)
-demo_log_memusage_wrap_LDADD = liblog_memusage.la liblog_memusage_malloc_wrap.la
+  demo_log_memusage_wrap_LDADD = liblog_memusage_malloc_wrap.la liblog_memusage.la
 
   bin_PROGRAMS += use_memory_openmp_wrap
   use_memory_openmp_wrap_CPPFLAGS = -DCOMPILE_OMP

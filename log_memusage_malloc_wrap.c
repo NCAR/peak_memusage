@@ -21,6 +21,24 @@
 
 
 
+static atomic_int_least64_t
+  malloced_bytes=0,       malloc_calls=0,
+  calloc_calls=0,         calloced_bytes=0,
+  realloced_bytes=0,      realloc_calls=0,
+  reallocarrayed_bytes=0, reallocarray_calls=0,
+  freed_bytes=0,          free_calls=0,
+  current_bytes=0,
+  max_bytes=0;
+
+// function prototypes for the 'real' memory functions the linker will wrap.
+void * __real_calloc       (size_t count, size_t size);
+void * __real_malloc       (size_t size);
+void * __real_realloc      (void *ptr, size_t size);
+void * __real_reallocarray (void *ptr, size_t nmemb, size_t size);
+void   __real_free         (void *ptr);
+
+
+
 __attribute__ ((visibility ("hidden")))
 size_t my_malloc_size (void *p)
 {
@@ -37,26 +55,6 @@ size_t my_malloc_size (void *p)
 #endif
   return 0;
 }
-
-
-
-static atomic_int_least64_t
-  malloced_bytes=0,  malloc_calls=0,
-  calloc_calls=0,    calloced_bytes=0,
-  realloced_bytes=0, realloc_calls=0,
-  freed_bytes=0,     free_calls=0,
-  current_bytes=0,   max_bytes=0;
-
-void * __real_calloc  (size_t count, size_t size);
-void   __real_free    (void *ptr);
-void * __real_malloc  (size_t size);
-void * __real_realloc (void *ptr, size_t size);
-
-/* void * __wrap_calloc(size_t count, size_t size) */
-/* { return __real_calloc(count,size); } */
-
-/* void * __wrap_realloc(void *p, size_t size) */
-/* { return __real_realloc(p,size); } */
 
 
 
@@ -84,7 +82,7 @@ void *__wrap_malloc (size_t size)
 
 
 
-void *__wrap_calloc(size_t nitems, size_t size)
+void *__wrap_calloc (size_t nitems, size_t size)
 {
   size_t alloced_size=0;
 
@@ -104,27 +102,7 @@ void *__wrap_calloc(size_t nitems, size_t size)
 
 
 
-void __wrap_free (void *buf)
-{
-  //abort();
-  size_t freed_size=0;
-
-  if (NULL == buf) return;
-
-  freed_size = my_malloc_size(buf);
-
-  /* update atomics */
-  free_calls++;
-  freed_bytes   += freed_size;
-  current_bytes -= freed_size;
-
-  fprintf(stderr, "free(%p), %d\n", buf, free_calls);
-  __real_free(buf);
-}
-
-
-
-void * __wrap_realloc(void *ptr, size_t size)
+void *__wrap_realloc (void *ptr, size_t size)
 {
   size_t old_size=0, new_size=0;
 
@@ -143,22 +121,73 @@ void * __wrap_realloc(void *ptr, size_t size)
     }
   else
     {
-      realloced_bytes += (old_size - new_size);
       current_bytes   -= (old_size - new_size);
     }
+
+  if (current_bytes > max_bytes) max_bytes = current_bytes;
 
   return ptr;
 }
 
 
 
+void *__wrap_reallocarray (void *ptr, size_t nitems, size_t size)
+{
+  size_t old_size=0, new_size=0;
+
+  old_size = my_malloc_size(ptr);
+
+  ptr = __real_reallocarray(ptr,nitems,size);
+
+  new_size = my_malloc_size(ptr);
+
+  /* update atomics */
+  reallocarray_calls++;
+  if (new_size > old_size)
+    {
+      reallocarrayed_bytes += (new_size - old_size);
+      current_bytes        += (new_size - old_size);
+    }
+  else
+    current_bytes          -= (old_size - new_size);
+
+  if (current_bytes > max_bytes) max_bytes = current_bytes;
+
+  return ptr;
+}
+
+
+
+void __wrap_free (void *buf)
+{
+  size_t freed_size=0;
+
+  if (NULL == buf) return;
+
+  freed_size = my_malloc_size(buf);
+
+  /* update atomics */
+  free_calls++;
+  freed_bytes   += freed_size;
+  current_bytes -= freed_size;
+
+  //fprintf(stderr, "free(%p), %d\n", buf, free_calls);
+  __real_free(buf);
+}
+
+
+
 __attribute__ ((visibility ("hidden")))
-void log_memusage_malloc_report2 (const char* prefix)
+void log_memusage_malloc_report (const char* prefix)
 {
   fprintf(stderr, "%smalloc: %lld bytes, %lld calls\n", prefix, malloced_bytes, malloc_calls);
   if (calloc_calls)  fprintf(stderr, "%scalloc: %lld bytes, %lld calls\n", prefix, calloced_bytes, calloc_calls);
   if (realloc_calls) fprintf(stderr, "%srealloc: %lld bytes, %lld calls\n", prefix, realloced_bytes, realloc_calls);
-  fprintf(stderr, "%sfree:   %lld bytes, %lld calls\n", prefix, freed_bytes,    free_calls);
+  if (reallocarray_calls) fprintf(stderr, "%sreallocarray: %lld bytes, %lld calls\n", prefix, reallocarrayed_bytes, reallocarray_calls);
+  fprintf(stderr, "%stotal allocations: %lld bytes, %lld calls\n", prefix,
+          malloced_bytes + calloced_bytes + realloced_bytes + reallocarrayed_bytes,
+          malloc_calls + calloc_calls + realloc_calls + reallocarray_calls);
+  fprintf(stderr, "%sfree: %lld bytes, %lld calls\n", prefix, freed_bytes,    free_calls);
   //fprintf(stderr, "%sremaining: %lld bytes\n", prefix, malloced_bytes - freed_bytes);
   fprintf(stderr, "%shigh water allocation: %lld (MB)\n",   prefix, max_bytes/1024/1024);
 }
@@ -170,6 +199,6 @@ __attribute__ ((visibility ("hidden")))
 void finalize ()
 {
   //fprintf(stderr, "..(destructor)... %s, line: %d\n", __FILE__, __LINE__);
-  log_memusage_malloc_report2(/* prefix = */ LOG_MEMUSAGE_LOGGING_PREFIX);
+  log_memusage_malloc_report(/* prefix = */ LOG_MEMUSAGE_LOGGING_PREFIX);
   //pthread_mutex_destroy(&lock);
 }
