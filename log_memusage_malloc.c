@@ -7,7 +7,11 @@
 #include <stdio.h>	/* print */
 #include <stdlib.h>	/* malloc */
 #include <unistd.h>     /* optarg */
-#include <stdatomic.h>
+#ifdef HAVE_STDATOMIC_H
+#  include <stdatomic.h>
+#else
+#  error "C compiler support for stdatomic.h required!!"
+#endif
 #include <dlfcn.h>
 #include <stdbool.h>
 #ifdef HAVE_MALLOC_H
