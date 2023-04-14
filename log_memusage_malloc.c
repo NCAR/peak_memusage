@@ -31,6 +31,10 @@ static atomic_int_least64_t
   current_bytes=0,
   max_bytes=0;
 
+/* https://stackoverflow.com/questions/7910666/problems-with-ld-preload-and-calloc-interposition-for-certain-executables */
+static bool inside_dlsym = false;
+static unsigned char static_buffer[8192];
+
 static void * (*real_malloc)       (size_t) = NULL;
 static void * (*real_calloc)       (size_t count, size_t size) = NULL;
 static void * (*real_realloc)      (void *ptr, size_t size) = NULL;;
@@ -65,6 +69,8 @@ static void mtrace_init ()
 {
   //fprintf(stderr, "..(init)... %s, line: %d\n", __FILE__, __LINE__);
 
+  inside_dlsym = true;
+
   real_malloc = dlsym(RTLD_NEXT, "malloc");
 
   if (NULL == real_malloc)
@@ -89,6 +95,7 @@ static void mtrace_init ()
       abort();
     }
 
+#ifdef HAVE_REALLOCARRAY
   real_reallocarray = dlsym(RTLD_NEXT, "reallocarray");
 
   if (NULL == real_reallocarray)
@@ -96,6 +103,7 @@ static void mtrace_init ()
       fprintf(stderr, "Error in `dlsym`: %s\n", dlerror());
       abort();
     }
+#endif
 
   real_free   = dlsym(RTLD_NEXT, "free");
 
@@ -104,6 +112,8 @@ static void mtrace_init ()
       fprintf(stderr, "Error in `dlsym`: %s\n", dlerror());
       abort();
     }
+
+  inside_dlsym = false;
 }
 
 
@@ -139,6 +149,9 @@ void *malloc (size_t size)
 
 void *calloc (size_t nitems, size_t size)
 {
+  if (inside_dlsym)
+    return static_buffer;
+
   size_t alloced_size=0;
 
   if (NULL == real_calloc)
@@ -191,7 +204,7 @@ void *realloc (void *ptr, size_t size)
 }
 
 
-
+#ifdef HAVE_REALLOCARRAY
 void *reallocarray (void *ptr, size_t nitems, size_t size)
 {
   size_t old_size=0, new_size=0;
@@ -219,11 +232,16 @@ void *reallocarray (void *ptr, size_t nitems, size_t size)
 
   return ptr;
 }
+#endif
 
 
 
 void free (void *buf)
 {
+  /* don't free our static hack static_buffer */
+  if (buf == static_buffer)
+    return;
+
   size_t freed_size=0;
 
   if (NULL == real_free)
