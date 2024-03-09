@@ -348,6 +348,8 @@ void* log_memusage_execution_thread (void* ptr)
                         gpu_memory.used[gpu]);
               fprintf(log_memusage_impl_data.fptr, "\n");
 
+              fflush(log_memusage_impl_data.fptr);
+
               pthread_mutex_unlock(&log_memusage_impl_data.mutex);
               /* done mutex */
 
